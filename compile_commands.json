@@ -1,0 +1,16 @@
+[
+    {
+        "arguments": [
+            "cc", 
+            "-c", 
+            "-I/home/arden/School/fpt/include", 
+            "-std=c++11", 
+            "-w", 
+            "-o", 
+            "/home/arden/School/fpt/build/source/./main.o", 
+            "main.c"
+        ], 
+        "directory": "/home/arden/School/fpt/source", 
+        "file": "main.c"
+    }
+]
