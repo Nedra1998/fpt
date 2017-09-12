@@ -13,13 +13,10 @@ export INCLUDE_DIR= include
 
 export BASE_PATH=$(shell pwd)
 
-export COMPILER=g++
+export COMPILER=gcc
 export CXXFLAGS= -MMD -std=c++11 -w -c
 
 export INSTALL_PATH=/usr/local
-
-export GCOV_LINK = -lgcov --coverage
-export GCOV_FLAG = -fprofile-arcs -ftest-coverage
 
 export COMMON_INCLUDE=-I$(BASE_PATH)/$(INCLUDE_DIR) $(INCLUDE)
 
@@ -56,7 +53,7 @@ printf "%b%*s%b: %s\n" "$(TARGET_COLOR)" 14 "$(1)" "$(NO_COLOR)" "$(2)"
 endef
 
 .PHONY : all
-all: external source test
+all:  source 
 
 .PHONY : clean
 clean: clean-external clean-source clean-test

@@ -3,11 +3,11 @@ SHELL = /bin/bash
 DIR = $(SOURCE_DIR)
 SUB_NAME = "Source"
 
-LIB_FILES = $(filter-out ./main.cpp, $(shell find -name "*.cpp"))
-EXE_FILES = $(shell find -name "main.cpp")
+LIB_FILES = $(filter-out ./main.c, $(shell find -name "*.c"))
+EXE_FILES = $(shell find -name "main.c")
 
-LIB_OBJ = $(LIB_FILES:%.cpp=$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o)
-EXE_OBJ = $(EXE_FILES:%.cpp=$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o)
+LIB_OBJ = $(LIB_FILES:%.c=$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o)
+EXE_OBJ = $(EXE_FILES:%.c=$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o)
 
 LIB_DEP = $(LIB_OBJ:.o=.d)
 EXE_DEP = $(EXE_OBJ:.o=.d)
@@ -63,7 +63,7 @@ uninstall:
 -include $(EXE_OBJ:.o=.d)
 -include $(LIB_OBJ:.o=.d)
 
-$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o: %.cpp
+$(BASE_PATH)/$(BUILD_DIR)/$(DIR)/%.o: %.c
 	mkdir -p $(@D)
 	$(call print,Building $@,$(COMPILE_COLOR))
 	$(COMPILER) $(COMMON_INCLUDE) $(CXXFLAGS) $(GCOV_FLAG) $< -o $@
