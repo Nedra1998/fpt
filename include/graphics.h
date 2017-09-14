@@ -3,7 +3,15 @@
 
 int InitFPT(unsigned int w, unsigned int h);
 int TermFPT();
-int ISetColorRgb(unsigned char r, unsigned char g, unsigned char b);
+
+int ShouldClose();
+int SetShouldClose(int should_close);
+int GetCurrentSize(int size[2]);
+int DGetCurrentSize(double size[2]);
+
+int RenderPresent();
+
+int ISetColorRgb(int r, int g, int b);
 int DSetColorRgb(double r, double g, double b);
 
 int Point(int x, int y);
@@ -25,8 +33,6 @@ int GetFontPixelHeight();
 int GetStringLength(const char*);
 int DrawString(const char* str, int x, int y);
 
-int GetCurrentSize(int size[2]);
-int DGetCurrentSize(double size[2]);
 int SetPenSize(int w, int h);
 
 int Text(int linec, const char* text, double startx, double starty, double height, double width, double kerning, double spacing);
