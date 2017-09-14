@@ -1,9 +1,13 @@
 #include "graphics.h"
 
 #include <SDL2/SDL.h>
+#include <math.h>
+
+#include "input.h"
 
 static SDL_Window* window_ = NULL;
 static SDL_Renderer* renderer_ = NULL;
+static SDL_Texture* display_ = NULL;
 static int window_should_close_ = 0;
 static int size_[2] = {0,0};
 
@@ -11,10 +15,22 @@ int InitFPT(unsigned int w, unsigned int h){
   if(SDL_Init(SDL_INIT_VIDEO) < 0){
     printf("SDL could not be initialized! SDL_Error: %s\n", SDL_GetError());
     return 0;
-  }else if (SDL_CreateWindowAndRenderer(w, h, SDL_WINDOW_RESIZABLE, &window_, &renderer_)){
-    printf("Could not create SDL window and renderer! SDL_Error: %s\n", SDL_GetError());
+  }
+  window_ = SDL_CreateWindow("FPT", 0, 0, w, h, 0);
+  if (window_ == NULL){
+    printf("Could not create SDL window! SDL_Error: %s\n", SDL_GetError());
     return 0;
   }
+  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+  if (renderer_ == NULL){
+    printf("Could not create SDL renderer! SDL_Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  SDL_SetRenderDrawBlendMode(renderer_,SDL_BLENDMODE_BLEND);
+  display_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,w, h);
+  SDL_SetRenderTarget(renderer_, display_);
+  SDL_SetRenderDrawColor(renderer_, 0,0,0,255);
+  SDL_RenderClear(renderer_);
   RenderPresent(renderer_);
   SDL_GetWindowSize(window_, &size_[0], &size_[1]);
   return 1;
@@ -27,6 +43,7 @@ int TermFPT(){
   if(window_ != NULL){
     SDL_DestroyWindow(window_);
   }
+  SDL_Quit();
   return 1;
 }
 
@@ -65,7 +82,10 @@ int DGetCurrentSize(double size[2]){
 }
 
 int RenderPresent(){
+  SDL_SetRenderTarget(renderer_, NULL);
+  SDL_RenderCopy(renderer_, display_, NULL, NULL);
   SDL_RenderPresent(renderer_);
+  SDL_SetRenderTarget(renderer_, display_);
 }
 
 int ISetColorRgb(int r, int g, int b){
@@ -191,4 +211,116 @@ int FillRectangle(int x, int y, int w, int h){
   ret = SDL_RenderFillRect(renderer_, &rect);
   RenderPresent();
   return ret;
+}
+
+int Triangle(int x1, int y1, int x2, int y2, int x3, int y3){
+  int x[3] = {x1,x2,x3};
+  int y[3] = {y1,y2,y3};
+  return Polygon(x, y, 3);
+}
+
+int FillTriangle(int x1, int y1, int x2, int y2, int x3,int y3){
+  int x[3] = {x1,x2,x3};
+  int y[3] = {y1,y2,y3};
+  return FillPolygon(x,y,3);
+}
+
+int Polygon(int *x, int *y, int n){
+  int i;
+  for(i = 0; i < n; i++){
+    int j = (i+1)%n;
+    SDL_RenderDrawLine(renderer_,  x[i], size_[1] - 1 - y[i], x[j], size_[1] - 1 - y[j]);
+  }
+  RenderPresent();
+  return 1;
+}
+
+int DPolygon(double *x, double *y, int n){
+  int i = 0;
+  int *x_int;
+  int *y_int;
+  for(i = 0; i < n; i++){
+    x_int[i] = (int)x[i];
+    y_int[i] = (int)y[i];
+  }
+  return Polygon(x_int, y_int, n);
+}
+
+int FillPolygon(int *x, int* y, int n){
+  int i;
+  double min = size_[1], max = 0;
+  for(i = 0; i < n; i++){
+    if (y[i] < min){
+      min = y[i];
+    }
+    if(y[i] > max){
+      max = y[i];
+    }
+  }
+
+  double row;
+  for(row = min + 0.01; row < max; row+=1){
+    double inter[n];
+    int index = 0;
+    for(i = 0; i < n;i++){
+      int j = (i+1)%n;
+      if ((y[i] <= row && y[j] >= row) || (y[i] >= row && y[j] <= row)){
+        inter[index] = (row - (double)y[i])*(((double)x[i] - (double)x[j])/((double)y[i] - (double)y[j])) + (double)x[i];
+        index++;
+      }
+    }
+    for(i = 0; i < index; i++){
+      int j;
+      for(j = 0; j < index; j++){
+        if(inter[j] > inter[i]){
+          double tmp = inter[i];
+          inter[i] = inter[j];
+          inter[j] = tmp;
+        }
+      }
+    }
+    for(i = 0; i < index - 1; i += 2){
+      SDL_RenderDrawLine(renderer_, (int)inter[i], size_[1] - 1 - (int)row, (int)inter[i+1], size_[1] - 1 - (int)row);
+    }
+  }
+  RenderPresent();
+
+  return 1;
+}
+
+int DFillPolygon(double *x, double *y, int n){
+  int *x_int;
+  int *y_int;
+  int i;
+  for(i = 0; i < n; i++){
+    x_int[i] = (int)x[i];
+    y_int[i] = (int)y[i];
+  }
+  return FillPolygon(x_int, y_int, n);
+}
+
+int Circle(int x, int y, int r){
+  double theta = 0, dtheta = (3.1415/50.0);
+  int x_array[500];
+  int y_array[500];
+  int n = 0;
+  for(theta = 0.0; theta < (3.1415 * 2.0); theta += dtheta){
+    x_array[n] = (r * cos(theta)) + x;
+    y_array[n] = (r * sin(theta)) + y;
+    n++;
+  }
+  return Polygon(x_array, y_array, n);
+}
+
+int FillCircle(int x, int y, int r){
+  double theta = 0, dtheta = (3.1415/50.0);
+  int x_array[100];
+  int y_array[100];
+  int n = 0;
+  for(theta = 0.0; theta < (3.1415 * 2.0); theta += dtheta){
+    x_array[n] = (r * cos(theta)) + x;
+    y_array[n] = (r * sin(theta)) + y;
+    n++;
+  }
+  return FillPolygon(x_array, y_array, n);
 }
