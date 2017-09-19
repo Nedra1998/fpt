@@ -31,7 +31,9 @@ int FillCircle(int a, int b, int r);
 
 int GetFontPixelHeight();
 int GetStringLength(const char*);
+int GetStringSize(const char* str, int* w, int* h);
 int DrawString(const char* str, int x, int y);
+int SetFontPt(int pt);
 
 int SetPenSize(int w, int h);
 

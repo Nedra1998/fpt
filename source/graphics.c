@@ -1,6 +1,7 @@
 #include "graphics.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <math.h>
 
 #include "input.h"
@@ -8,12 +9,19 @@
 static SDL_Window* window_ = NULL;
 static SDL_Renderer* renderer_ = NULL;
 static SDL_Texture* display_ = NULL;
+static TTF_Font* font_ = NULL;
 static int window_should_close_ = 0;
 static int size_[2] = {0,0};
+
+static int font_pt_ = 12;
 
 int InitFPT(unsigned int w, unsigned int h){
   if(SDL_Init(SDL_INIT_VIDEO) < 0){
     printf("SDL could not be initialized! SDL_Error: %s\n", SDL_GetError());
+    return 0;
+  }
+  if(TTF_Init() == -1){
+    printf("SDL TTF could not be initialized! TTF_Error: %s\n", TTF_GetError());
     return 0;
   }
   window_ = SDL_CreateWindow("FPT", 0, 0, w, h, 0);
@@ -43,6 +51,10 @@ int TermFPT(){
   if(window_ != NULL){
     SDL_DestroyWindow(window_);
   }
+  if(font_ != NULL){
+    TTF_CloseFont(font_);
+  }
+  TTF_Quit();
   SDL_Quit();
   return 1;
 }
@@ -323,4 +335,55 @@ int FillCircle(int x, int y, int r){
     n++;
   }
   return FillPolygon(x_array, y_array, n);
+}
+
+int GetFontPixelHeight(){
+  return font_pt_;
+}
+
+int GetStringLength(const char* str){
+  int w, h;
+  GetStringSize(str, &w, &h);
+  return w;
+}
+
+int GetStringSize(const char* str, int* w, int *h){
+  if(font_ == NULL){
+    font_ = TTF_OpenFont("roboto.ttf", font_pt_);
+    if(font_ == NULL){
+      printf("Failed to open \"roboto.ttf\"!");
+      return 0;
+    }
+  }
+  TTF_SizeUTF8(font_, str, w, h);
+  return 1;
+}
+
+int DrawString(const char* str, int x, int y){
+  if(font_ == NULL){
+    font_ = TTF_OpenFont("roboto.ttf", font_pt_);
+    if(font_ == NULL){
+      printf("Failed to open \"roboto.ttf\"!\n");
+      return 0;
+    }
+  }
+  SDL_Color color;
+  SDL_GetRenderDrawColor(renderer_, &color.r, &color.g, &color.b, &color.a);
+  SDL_Surface* text = TTF_RenderUTF8_Solid(font_, str, color);
+  SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer_, text);
+  SDL_Rect dest = {x, size_[1] - y, text->w, text->h};
+  SDL_RenderCopy(renderer_, text_texture, NULL, &dest);
+  SDL_FreeSurface(text);
+  SDL_DestroyTexture(text_texture);
+  RenderPresent();
+  return 1;
+}
+
+int SetFontPt(int pt){
+  font_pt_ = pt;
+  return 1;
+}
+
+int Text(int linec, const char* text, double startx, double starty, double height, double width, double kerning, double spacing){
+  return 0;
 }

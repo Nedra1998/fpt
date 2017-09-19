@@ -4,7 +4,7 @@
 
 int main() {
   InitFPT(500, 500);
-  DSetColorRgb(1.0, 1.0, 1.0);
+  /* DSetColorRgb(1.0, 1.0, 1.0); */
   /* FillRectangle(50, 50, 100, 100); */
   /* Point(250, 250); */
   /* DSetColorRgb(0.0, 1.0, 1.0); */
@@ -16,10 +16,18 @@ int main() {
   /* FillPolygon(x, y, 23); */
   /* DSetColorRgb(1.0, 0.0, 0.0); */
   /* Polygon(x, y, 23); */
-  FillCircle(300, 300, 50);
+  /* FillCircle(300, 300, 50); */
 
+  DSetColorRgb(1.0, 1.0, 1.0);
+  while(1){
+    int p[2];
+    IGetClick(p);
+    if(p[0] < 100 && p[1] < 100){
+      break;
+    }
+    FillCircle(p[0], p[1], 10);
+  }
 
-  GetKey();
   TermFPT();
   return 0;
 }
