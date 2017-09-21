@@ -15,8 +15,10 @@ int ISetColorRgb(int r, int g, int b);
 int DSetColorRgb(double r, double g, double b);
 
 int Point(int x, int y);
+// Deprecated
 int SafePoint(int x, int y);
 int Line(int x1, int y1, int x2, int y2);
+// Deprecated
 int SafeLine(int x1, int y1, int x2, int y2);
 int Rectangle(int x, int y, int w, int h);
 int FillRectangle(int x, int y, int w, int h);
@@ -35,10 +37,13 @@ int GetStringSize(const char* str, int* w, int* h);
 int DrawString(const char* str, int x, int y);
 int SetFontPt(int pt);
 
+// Uninplemented
 int SetPenSize(int w, int h);
 
+// Uninplemented
 int Text(int linec, const char* text, double startx, double starty, double height, double width, double kerning, double spacing);
 
+// Uninplemented
 int SaveImageToFile(const char* file);
 
 #endif /* ifndef FPT_GRAPHICS_H */

@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 
 export NAME= FPT
-export LINK= -lSDL2 -lSDL2_ttf -lm
+export LINK= -lSDL2 -lSDL2_ttf -lSDL2_image -lm
 export INCLUDE=
 export TYPE= lib
 

@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <math.h>
 
 #include "input.h"
@@ -22,6 +23,12 @@ int InitFPT(unsigned int w, unsigned int h){
   }
   if(TTF_Init() == -1){
     printf("SDL TTF could not be initialized! TTF_Error: %s\n", TTF_GetError());
+    return 0;
+  }
+  int flags = IMG_INIT_PNG|IMG_INIT_JPG;
+  int initted=IMG_Init(flags);
+  if(initted&flags != flags){
+    printf("SDL Image could not be initialized! IMG_Error: %s\n", IMG_GetError());
     return 0;
   }
   window_ = SDL_CreateWindow("FPT", 0, 0, w, h, 0);
@@ -54,6 +61,7 @@ int TermFPT(){
   if(font_ != NULL){
     TTF_CloseFont(font_);
   }
+  IMG_Quit();
   TTF_Quit();
   SDL_Quit();
   return 1;
@@ -385,5 +393,9 @@ int SetFontPt(int pt){
 }
 
 int Text(int linec, const char* text, double startx, double starty, double height, double width, double kerning, double spacing){
+  return 0;
+}
+
+int SaveImageToFile(const char* file){
   return 0;
 }

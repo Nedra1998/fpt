@@ -28,6 +28,7 @@ int main() {
     FillCircle(p[0], p[1], 10);
   }
 
+  SaveImageToFile("tmp.png");
   TermFPT();
   return 0;
 }
