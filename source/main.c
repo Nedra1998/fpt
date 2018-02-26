@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 int main() {
-  InitFPT(500, 500);
+  G_init_graphics(600, 600);
   /* DSetColorRgb(1.0, 1.0, 1.0); */
   /* FillRectangle(50, 50, 100, 100); */
   /* Point(250, 250); */
@@ -18,17 +18,19 @@ int main() {
   /* Polygon(x, y, 23); */
   /* FillCircle(300, 300, 50); */
 
-  DSetColorRgb(1.0, 1.0, 1.0);
+  G_rgb(1.0, 1.0, 1.0);
+  /* DSetColorRgb(1.0, 1.0, 1.0); */
   while(1){
     int p[2];
-    IGetClick(p);
+    /* IGetClick(p); */
+    Gi_wait_click(p);
     if(p[0] < 100 && p[1] < 100){
       break;
     }
-    FillCircle(p[0], p[1], 10);
+    G_fill_circle(p[0], p[1], 10);
   }
 
-  SaveImageToFile("tmp.png");
-  TermFPT();
+  G_save_image_to_file("tmp.png");
+  G_term_graphics();
   return 0;
 }

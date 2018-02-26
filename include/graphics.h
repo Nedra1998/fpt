@@ -1,8 +1,10 @@
 #ifndef FPT_GRAPHICS_H
 #define FPT_GRAPHICS_H
 
-int InitFPT(unsigned int w, unsigned int h);
-int TermFPT();
+// G_init_graphcs
+int G_init_graphics(unsigned int w, unsigned int h);
+// G_term_graphics
+int G_term_graphics();
 
 int ShouldClose();
 int SetShouldClose(int should_close);
@@ -11,25 +13,39 @@ int DGetCurrentSize(double size[2]);
 
 int RenderPresent();
 
-int ISetColorRgb(int r, int g, int b);
-int DSetColorRgb(double r, double g, double b);
+// Gi_rgb
+int Gi_rgb(int r, int g, int b);
+// G_rgb
+int G_rgb(double r, double g, double b);
 
-int Point(int x, int y);
+// G_point
+int G_point(int x, int y);
 // Deprecated
 int SafePoint(int x, int y);
-int Line(int x1, int y1, int x2, int y2);
+// G_line
+int G_line(int x1, int y1, int x2, int y2);
 // Deprecated
 int SafeLine(int x1, int y1, int x2, int y2);
-int Rectangle(int x, int y, int w, int h);
-int FillRectangle(int x, int y, int w, int h);
-int Triangle(int x1, int y1, int x2, int y2, int x3, int y3);
-int FillTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
-int Polygon(int* x, int* y, int n);
-int DPolygon(double* x, double* y, int n);
-int FillPolygon(int* x, int* y, int n);
-int DFillPolygon(double* x, double* y, int n);
-int Circle(int x, int y, int r);
-int FillCircle(int a, int b, int r);
+// G_rectangle
+int G_rectangle(int x, int y, int w, int h);
+// G_fill_rectangle
+int G_fill_rectangle(int x, int y, int w, int h);
+// G_triangle
+int G_triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+// G_fill_triangle
+int G_fill_triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+// Gi_polygon
+int Gi_polygon(int* x, int* y, int n);
+// G_polygon
+int G_polygon(double* x, double* y, int n);
+// Gi_fill_polygon
+int Gi_fill_polygon(int* x, int* y, int n);
+// G_fill_polygon
+int G_fill_polygon(double* x, double* y, int n);
+// G_circle
+int G_ircle(int x, int y, int r);
+// G_fill_circle
+int G_fill_circle(int a, int b, int r);
 
 int GetFontPixelHeight();
 int GetStringLength(const char*);
@@ -43,7 +59,7 @@ int SetPenSize(int w, int h);
 // Uninplemented
 int Text(int linec, const char* text, double startx, double starty, double height, double width, double kerning, double spacing);
 
-// Uninplemented
-int SaveImageToFile(const char* file);
+// G_save_image_to_file
+int G_save_image_to_file(const char* file);
 
 #endif /* ifndef FPT_GRAPHICS_H */

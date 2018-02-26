@@ -16,7 +16,7 @@ static int size_[2] = {0,0};
 
 static int font_pt_ = 12;
 
-int InitFPT(unsigned int w, unsigned int h){
+int G_init_graphics(unsigned int w, unsigned int h){
   if(SDL_Init(SDL_INIT_VIDEO) < 0){
     printf("SDL could not be initialized! SDL_Error: %s\n", SDL_GetError());
     return 0;
@@ -51,7 +51,7 @@ int InitFPT(unsigned int w, unsigned int h){
   return 1;
 }
 
-int TermFPT(){
+int G_term_graphics(){
   if(renderer_ != NULL){
     SDL_DestroyRenderer(renderer_);
   }
@@ -106,17 +106,18 @@ int RenderPresent(){
   SDL_RenderCopy(renderer_, display_, NULL, NULL);
   SDL_RenderPresent(renderer_);
   SDL_SetRenderTarget(renderer_, display_);
+  return 1;
 }
 
-int ISetColorRgb(int r, int g, int b){
+int Gi_rgb(int r, int g, int b){
   return SDL_SetRenderDrawColor(renderer_, r, g, b, 255);
 }
 
-int DSetColorRgb(double r, double g, double b){
+int G_rgb(double r, double g, double b){
   return SDL_SetRenderDrawColor(renderer_, (int)(255*r), (int)(255*g),(int)(255*b), 255);
 }
 
-int Point(int x, int y){
+int G_point(int x, int y){
   int ret = SDL_RenderDrawPoint(renderer_, x, size_[1] - 1 - y);
   RenderPresent();
   return ret;
@@ -127,13 +128,13 @@ int SavePoint(int x, int y){
   int size[2];
   GetCurrentSize(size);
   if(x > 0 && y > 0 && x < size[0] && y < size[1]){
-    ret = Point(x, size_[1] - 1 - y);
+    ret = G_point(x, size_[1] - 1 - y);
   }
   RenderPresent();
   return ret;
 }
 
-int Line(int x1, int y1, int x2, int y2){
+int G_line(int x1, int y1, int x2, int y2){
   int ret = 0;
   ret = SDL_RenderDrawLine(renderer_, x1, size_[1] - 1 - y1, x2, size_[1] - 1 - y2);
   RenderPresent();
@@ -142,7 +143,7 @@ int Line(int x1, int y1, int x2, int y2){
 
 int SafeLine(int x1, int y1, int x2, int y2){
   if(x1 > 0 && y1 > 0 && x2 > 0 && y2 > 0 && x1 < size_[0] && x1 < size_[1] && x2 < size_[0] && y2 < size_[1]){
-    return Line(x1, y1, x2, y2);
+    return G_line(x1, y1, x2, y2);
   }else{
     double xs = x1, ys = y1, xe = x2, ye = y2;
     // Check clipping for y and 0
@@ -213,11 +214,11 @@ int SafeLine(int x1, int y1, int x2, int y2){
     x2 = (int)xe;
     y2 = (int)ye;
 
-    return Line(x1, y1, x2, y2);
+    return G_line(x1, y1, x2, y2);
   }
 }
 
-int Rectangle(int x, int y, int w, int h){
+int G_rectangle(int x, int y, int w, int h){
   int ret = 0;
   SDL_Rect rect = {x, size_[1] - 1- y - h, w, h};
   ret = SDL_RenderDrawRect(renderer_, &rect);
@@ -225,7 +226,7 @@ int Rectangle(int x, int y, int w, int h){
   return ret;
 }
 
-int FillRectangle(int x, int y, int w, int h){
+int G_fill_rectangle(int x, int y, int w, int h){
   int ret = 0;
   SDL_Rect rect = {x, size_[1] - 1 - y - h, w, h};
   ret = SDL_RenderFillRect(renderer_, &rect);
@@ -233,19 +234,19 @@ int FillRectangle(int x, int y, int w, int h){
   return ret;
 }
 
-int Triangle(int x1, int y1, int x2, int y2, int x3, int y3){
+int G_triangle(int x1, int y1, int x2, int y2, int x3, int y3){
   int x[3] = {x1,x2,x3};
   int y[3] = {y1,y2,y3};
-  return Polygon(x, y, 3);
+  return Gi_polygon(x, y, 3);
 }
 
-int FillTriangle(int x1, int y1, int x2, int y2, int x3,int y3){
+int G_fill_triangle(int x1, int y1, int x2, int y2, int x3,int y3){
   int x[3] = {x1,x2,x3};
   int y[3] = {y1,y2,y3};
-  return FillPolygon(x,y,3);
+  return Gi_fill_polygon(x,y,3);
 }
 
-int Polygon(int *x, int *y, int n){
+int Gi_polygon(int *x, int *y, int n){
   int i;
   for(i = 0; i < n; i++){
     int j = (i+1)%n;
@@ -255,7 +256,7 @@ int Polygon(int *x, int *y, int n){
   return 1;
 }
 
-int DPolygon(double *x, double *y, int n){
+int G_polygon(double *x, double *y, int n){
   int i = 0;
   int *x_int;
   int *y_int;
@@ -263,10 +264,10 @@ int DPolygon(double *x, double *y, int n){
     x_int[i] = (int)x[i];
     y_int[i] = (int)y[i];
   }
-  return Polygon(x_int, y_int, n);
+  return Gi_polygon(x_int, y_int, n);
 }
 
-int FillPolygon(int *x, int* y, int n){
+int Gi_fill_polygon(int *x, int* y, int n){
   int i;
   double min = size_[1], max = 0;
   for(i = 0; i < n; i++){
@@ -308,7 +309,7 @@ int FillPolygon(int *x, int* y, int n){
   return 1;
 }
 
-int DFillPolygon(double *x, double *y, int n){
+int G_fill_polygon(double *x, double *y, int n){
   int *x_int;
   int *y_int;
   int i;
@@ -316,10 +317,10 @@ int DFillPolygon(double *x, double *y, int n){
     x_int[i] = (int)x[i];
     y_int[i] = (int)y[i];
   }
-  return FillPolygon(x_int, y_int, n);
+  return Gi_fill_polygon(x_int, y_int, n);
 }
 
-int Circle(int x, int y, int r){
+int G_circle(int x, int y, int r){
   double theta = 0, dtheta = (3.1415/50.0);
   int x_array[500];
   int y_array[500];
@@ -329,10 +330,10 @@ int Circle(int x, int y, int r){
     y_array[n] = (r * sin(theta)) + y;
     n++;
   }
-  return Polygon(x_array, y_array, n);
+  return Gi_polygon(x_array, y_array, n);
 }
 
-int FillCircle(int x, int y, int r){
+int G_fill_circle(int x, int y, int r){
   double theta = 0, dtheta = (3.1415/50.0);
   int x_array[100];
   int y_array[100];
@@ -342,7 +343,7 @@ int FillCircle(int x, int y, int r){
     y_array[n] = (r * sin(theta)) + y;
     n++;
   }
-  return FillPolygon(x_array, y_array, n);
+  return Gi_fill_polygon(x_array, y_array, n);
 }
 
 int GetFontPixelHeight(){
@@ -396,7 +397,7 @@ int Text(int linec, const char* text, double startx, double starty, double heigh
   return 0;
 }
 
-int SaveImageToFile(const char* filename){
+int G_save_image_to_file(const char* filename){
   SDL_Texture* ren_tex;
   SDL_Surface *surf;
   int st, w, h, format;
@@ -457,8 +458,6 @@ int SaveImageToFile(const char* filename){
         SDL_Log("Failed saving image: %s\n", SDL_GetError());
         goto cleanup;
     }
-
-    SDL_Log("Saved texture as BMP to \"%s\"\n", filename);
 
 cleanup:
     SDL_FreeSurface(surf);

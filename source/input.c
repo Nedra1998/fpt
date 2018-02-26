@@ -4,7 +4,7 @@
 
 #include "graphics.h"
 
-int IGetClick(int p[2]){
+int Gi_wait_click(int p[2]){
   SDL_Event event;
   while(event.type != SDL_MOUSEBUTTONDOWN){
     SDL_WaitEvent(&event);
@@ -16,15 +16,15 @@ int IGetClick(int p[2]){
   return 1;
 }
 
-int DGetClick(double p[2]){
+int G_wait_click(double p[2]){
   int p_int[2];
-  int ret = IGetClick(p_int);
+  int ret = Gi_wait_click(p_int);
   p[0] = (double)p_int[0];
   p[0] = (double)p_int[1];
   return ret;
 }
 
-int GetKey(){
+int G_wait_key(){
   SDL_Event event;
   while(event.type != SDL_KEYDOWN){
     SDL_WaitEvent(&event);
