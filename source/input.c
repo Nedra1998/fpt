@@ -20,7 +20,7 @@ int G_wait_click(double p[2]){
   int p_int[2];
   int ret = Gi_wait_click(p_int);
   p[0] = (double)p_int[0];
-  p[0] = (double)p_int[1];
+  p[1] = (double)p_int[1];
   return ret;
 }
 

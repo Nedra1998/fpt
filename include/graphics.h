@@ -1,6 +1,8 @@
 #ifndef FPT_GRAPHICS_H
 #define FPT_GRAPHICS_H
 
+void SetAutoDisplay(int val);
+
 // G_init_graphcs
 int G_init_graphics(unsigned int w, unsigned int h);
 // G_term_graphics
@@ -46,6 +48,8 @@ int G_fill_polygon(double* x, double* y, int n);
 int G_ircle(int x, int y, int r);
 // G_fill_circle
 int G_fill_circle(int a, int b, int r);
+
+int G_clear();
 
 int GetFontPixelHeight();
 int GetStringLength(const char*);

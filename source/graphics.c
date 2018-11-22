@@ -15,6 +15,11 @@ static int window_should_close_ = 0;
 static int size_[2] = {0,0};
 
 static int font_pt_ = 12;
+static int auto_display_ = 1;
+
+void SetAutoDisplay(int val){
+  auto_display_ = val;
+}
 
 int G_init_graphics(unsigned int w, unsigned int h){
   if(SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -119,7 +124,9 @@ int G_rgb(double r, double g, double b){
 
 int G_point(int x, int y){
   int ret = SDL_RenderDrawPoint(renderer_, x, size_[1] - 1 - y);
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return ret;
 }
 
@@ -130,14 +137,18 @@ int SavePoint(int x, int y){
   if(x > 0 && y > 0 && x < size[0] && y < size[1]){
     ret = G_point(x, size_[1] - 1 - y);
   }
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return ret;
 }
 
 int G_line(int x1, int y1, int x2, int y2){
   int ret = 0;
   ret = SDL_RenderDrawLine(renderer_, x1, size_[1] - 1 - y1, x2, size_[1] - 1 - y2);
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return ret;
 }
 
@@ -222,7 +233,9 @@ int G_rectangle(int x, int y, int w, int h){
   int ret = 0;
   SDL_Rect rect = {x, size_[1] - 1- y - h, w, h};
   ret = SDL_RenderDrawRect(renderer_, &rect);
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return ret;
 }
 
@@ -230,7 +243,9 @@ int G_fill_rectangle(int x, int y, int w, int h){
   int ret = 0;
   SDL_Rect rect = {x, size_[1] - 1 - y - h, w, h};
   ret = SDL_RenderFillRect(renderer_, &rect);
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return ret;
 }
 
@@ -252,7 +267,9 @@ int Gi_polygon(int *x, int *y, int n){
     int j = (i+1)%n;
     SDL_RenderDrawLine(renderer_,  x[i], size_[1] - 1 - y[i], x[j], size_[1] - 1 - y[j]);
   }
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
   return 1;
 }
 
@@ -304,7 +321,9 @@ int Gi_fill_polygon(int *x, int* y, int n){
       SDL_RenderDrawLine(renderer_, (int)inter[i], size_[1] - 1 - (int)row, (int)inter[i+1], size_[1] - 1 - (int)row);
     }
   }
-  RenderPresent();
+  if(auto_display_ == 1){
+    RenderPresent();
+  }
 
   return 1;
 }
@@ -344,6 +363,10 @@ int G_fill_circle(int x, int y, int r){
     n++;
   }
   return Gi_fill_polygon(x_array, y_array, n);
+}
+
+int G_clear(){
+  return SDL_RenderClear(renderer_);
 }
 
 int GetFontPixelHeight(){

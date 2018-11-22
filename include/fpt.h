@@ -7,5 +7,13 @@
  * can be found int the documentation folder of source.
  */
 
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+#include <string.h>
+
 #include "graphics.h"
 #include "input.h"

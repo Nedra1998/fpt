@@ -4,6 +4,7 @@
 
 int main() {
   G_init_graphics(600, 600);
+  /* SetAutoDisplay(0); */
   /* DSetColorRgb(1.0, 1.0, 1.0); */
   /* FillRectangle(50, 50, 100, 100); */
   /* Point(250, 250); */
@@ -21,11 +22,14 @@ int main() {
   G_rgb(1.0, 1.0, 1.0);
   /* DSetColorRgb(1.0, 1.0, 1.0); */
   while(1){
-    int p[2];
+    double p[2];
     /* IGetClick(p); */
-    Gi_wait_click(p);
+    G_wait_click(p);
     if(p[0] < 100 && p[1] < 100){
       break;
+    }
+    if(p[0] > 500 && p[1] < 100){
+      /* RenderPresent(); */
     }
     G_fill_circle(p[0], p[1], 10);
   }
