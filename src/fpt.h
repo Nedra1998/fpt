@@ -1,5 +1,17 @@
-#ifndef FPT_GRAPHICS_H_
-#define FPT_GRAPHICS_H_
+#ifndef FPT_H_
+#define FPT_H_
+
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+#define FPT_VERSION_MAJOR 2
+#define FPT_VERSION_MINOR 0
+
+void G_version(unsigned* major, unsigned* minor);
+void G_sleep(double s);
 
 int G_init_graphics(unsigned int width, unsigned int height);
 int G_term_graphics();
@@ -32,6 +44,16 @@ int G_clear();
 
 int G_save_image_to_file(void* filename);
 
+int G_handle_events(int* p);
+void G_clear_events();
+
+int Gi_wait_click(int p[2]);
+int G_wait_click(double p[2]);
+int G_wait_key();
+
+int Gi_poll_click(int p[2]);
+int G_poll_click(double p[2]);
+int G_poll_key();
 
 
-#endif  // FPT_GRAPHICS_H_
+#endif  // FPT_H_
