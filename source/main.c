@@ -2,6 +2,10 @@
 
 #include <stdio.h>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+
 int main() {
   G_init_graphics(600, 600);
   /* SetAutoDisplay(0); */
@@ -20,6 +24,7 @@ int main() {
   /* FillCircle(300, 300, 50); */
 
   G_rgb(1.0, 1.0, 1.0);
+  printf("%d\n", SDL_PIXELFORMAT_RGBA32);
   /* DSetColorRgb(1.0, 1.0, 1.0); */
   while(1){
     double p[2];
