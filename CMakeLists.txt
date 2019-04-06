@@ -6,6 +6,7 @@ option(SDL "Force using SDL2" OFF)
 
 set(CMAKE_C_STANDARD 11)
 
+file(GLOB_RECURSE fpt_hdr ${CMAKE_CURRENT_SOURCE_DIR} "src/*.h")
 file(GLOB_RECURSE fpt_src ${CMAKE_CURRENT_SOURCE_DIR} "src/*.c")
 add_library(fpt ${fpt_src})
 
@@ -19,6 +20,16 @@ else()
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/sdl")
   target_include_directories(fpt PUBLIC ${SDL2_INCLUDE_DIR})
   target_link_libraries(fpt ${SDL2_LIBRARIES})
+endif()
+
+install(TARGETS fpt LIBRARY DESTINATION lib ARCHIVE DESTINATION lib/static)
+install(FILES ${fpt_hdr} DESTINATION include/fpt)
+
+if(NOT TARGET uninstall)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/uninstall.cmake" IMMEDIATE @ONLY)
+  add_custom_target(uninstall "${CMAKE_COMMAND}" -P
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/uninstall.cmake")
 endif()
 
 if(EXAMPLE)
