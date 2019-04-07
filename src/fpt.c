@@ -5,19 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef FPT_X11
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
-
 static unsigned int width_, height_;
-
-static Display* display_;
-static Window window_;
-static Pixmap pixmap_;
-static GC window_context_;
-static GC pixmap_context_;
 
 void G_version(unsigned* major, unsigned* minor) {
   *major = FPT_VERSION_MAJOR;
@@ -27,6 +15,18 @@ void G_version(unsigned* major, unsigned* minor) {
 void G_sleep(double sec) {
   nanosleep(&(struct timespec){(int)sec, (long)(1e9 * (sec - (int)sec))}, NULL);
 }
+
+#ifdef FPT_X11
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysym.h>
+
+static Display* display_;
+static Window window_;
+static Pixmap pixmap_;
+static GC window_context_;
+static GC pixmap_context_;
 
 int G_init_graphics(unsigned int width, unsigned int height) {
   width_ = width;
@@ -52,20 +52,11 @@ int G_init_graphics(unsigned int width, unsigned int height) {
   pixmap_context_ = XCreateGC(display_, pixmap_, 0, NULL);
   if (pixmap_context_ == NULL) return 0;
   XClearWindow(display_, window_);
-  /* XClearArea(display_, window_, 0, 0, 0, 0, True); */
   XSetForeground(display_, pixmap_context_, 0x000000);
   XFillRectangle(display_, pixmap_, pixmap_context_, 0, 0, width, height);
   XCopyArea(display_, pixmap_, window_, window_context_, 0, 0, width, height, 0,
             0);
   XFlush(display_);
-  /* XSync(display_, False); */
-  /* XFillRectangle(display_, pixmap_, pixmap_context_, 0, 0, width, height); */
-  /* nanosleep(&(struct timespec){(int)1, (long)50000000}, NULL); */
-  /* int sig = 0; */
-  /* do { */
-  /*   sig = G_handle_events(NULL); */
-  /*   printf(">>%d\n", sig); */
-  /* } while (sig != 0); */
   XSetForeground(display_, pixmap_context_, 0xffffff);
   return 1;
 }
@@ -197,7 +188,7 @@ int G_line(int x0, int y0, int x1, int y1) {
   XDrawLine(display_, pixmap_, pixmap_context_, (int)xs, height_ - 1 - (int)ys,
             (int)xe, height_ - 1 - (int)ye);
 
-  return 0;
+  return 1;
 }
 
 int G_triangle(int x0, int y0, int x1, int y1, int x2, int y2) {
@@ -501,7 +492,6 @@ int G_wait_key() {
   G_display_image();
   int sig;
   while ((sig = G_handle_events(NULL)) <= 0) {
-    /* printf(">>%d\n", sig); */
   }
   return sig;
 }
@@ -524,6 +514,354 @@ int G_poll_click(double p[2]) {
 int G_poll_key() {
   G_display_image();
   return G_handle_events(NULL);
+}
+#endif
+#ifdef FPT_SDL
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <math.h>
+
+static SDL_Window* window_ = NULL;
+static SDL_Renderer* renderer_ = NULL;
+static SDL_Texture* display_ = NULL;
+
+int G_init_graphics(unsigned int width, unsigned int height) {
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    return 0;
+  }
+  if (TTF_Init() == -1) {
+    return 0;
+  }
+  int flags = IMG_INIT_PNG | IMG_INIT_JPG;
+  int initted = IMG_Init(flags);
+  if (initted & flags != flags) {
+    return 0;
+  }
+  window_ = SDL_CreateWindow("FPT", 0, 0, width, height, 0);
+  if (window_ == NULL) {
+    return 0;
+  }
+  renderer_ = SDL_CreateRenderer(
+      window_, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+  if (renderer_ == NULL) {
+    return 0;
+  }
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
+  display_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA8888,
+                               SDL_TEXTUREACCESS_TARGET, width, height);
+  SDL_SetRenderTarget(renderer_, display_);
+  SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
+  SDL_RenderClear(renderer_);
+  G_display_image();
+  SDL_GetWindowSize(window_, &width_, &height_);
+  return 1;
+}
+
+int G_term_graphics() {
+  if (renderer_ != NULL) {
+    SDL_DestroyRenderer(renderer_);
+  }
+  if (window_ != NULL) {
+    SDL_DestroyWindow(window_);
+  }
+  IMG_Quit();
+  TTF_Quit();
+  SDL_Quit();
+  return 1;
+}
+
+void G_display_image() {
+  SDL_SetRenderTarget(renderer_, NULL);
+  SDL_RenderCopy(renderer_, display_, NULL, NULL);
+  SDL_RenderPresent(renderer_);
+  SDL_SetRenderTarget(renderer_, display_);
+}
+
+void G_hex(unsigned long c) {
+  SDL_SetRenderDrawColor(renderer_, (int)((c >> 16) & 0xff),
+                         (int)((c >> 8) & 0xff), (int)((c)&0xff), 255);
+}
+void G_rgb(double r, double g, double b) {
+  SDL_SetRenderDrawColor(renderer_, (int)(255 * r), (int)(255 * g),
+                         (int)(255 * b), 255);
+}
+void Gi_rgb(int r, int g, int b) {
+  SDL_SetRenderDrawColor(renderer_, r, g, b, 255);
+}
+
+int G_pixel(int x, int y) {
+  return SDL_RenderDrawPoint(renderer_, x, height_ - 1 - y);
+}
+int G_point(int x, int y) {
+  if (x < 0 || x >= width_ || y < 0 || y >= height_) return 0;
+  return SDL_RenderDrawPoint(renderer_, x, height_ - 1 - y);
+}
+
+int G_line(int x0, int y0, int x1, int y1) {
+  double xs, ys, xe, ye;
+  double t, xedge, yedge;
+  if (x0 >= 0 && x0 < width_ && y0 >= 0 && y0 < height_ && x1 >= 0 &&
+      x1 < width_ && y1 >= 0 && y1 < height_) {
+    return SDL_RenderDrawLine(renderer_, x0, height_ - 1 - y0, x1,
+                              height_ - 1 - y1);
+  }
+
+  xs = (double)x0;
+  ys = (double)y0;
+  xe = (double)x1;
+  ye = (double)y1;
+
+  yedge = 0;
+  if (ys >= yedge) {
+    if (ye < yedge) {
+      t = (yedge - ys) / (ye - ys);
+      xe = xs + t * (xe - xs);
+      ye = yedge;
+    }
+  } else {
+    if (ye >= yedge) {
+      t = (yedge - ys) / (ye - ys);
+      xs = xs + t * (xe - xs);
+      ys = yedge;
+    } else {
+      return 0;
+    }
+  }
+  yedge = height_ - 1;
+  if (ys <= yedge) {
+    if (ye > yedge) {
+      t = (yedge - ys) / (ye - ys);
+      xe = xs + t * (xe - xs);
+      ye = yedge;
+    }
+  } else {
+    if (ye <= yedge) {
+      t = (yedge - ys) / (ye - ys);
+      xs = xs + t * (xe - xs);
+      ys = yedge;
+    } else {
+      return 0;
+    }
+  }
+  xedge = 0;
+  if (xs >= xedge) {
+    if (xe < xedge) {
+      t = (xedge - xs) / (xe - xs);
+      ye = ys + t * (ye - ys);
+      xe = xedge;
+    }
+  } else {
+    if (xe >= xedge) {
+      t = (xedge - xs) / (xe - xs);
+      ys = ys + t * (ye - ys);
+      xs = xedge;
+    } else {
+      return 0;
+    }
+  }
+  xedge = width_ - 1;
+  if (xs <= xedge) {
+    if (xe > xedge) {
+      t = (xedge - xs) / (xe - xs);
+      ye = ys + t * (ye - ys);
+      xe = xedge;
+    }
+  } else {
+    if (xe <= xedge) {
+      t = (xedge - xs) / (xe - xs);
+      ys = ys + t * (ye - ys);
+      xs = xedge;
+    } else {
+      return 0;
+    }
+  }
+
+  return SDL_RenderDrawLine(renderer_, (int)xs, height_ - 1 - (int)ys, (int)xe,
+                            height_ - 1 - (int)ye);
+}
+int G_triangle(int x0, int y0, int x1, int y1, int x2, int y2) {
+  return SDL_RenderDrawLines(renderer_,
+                             (SDL_Point[4]){{x0, height_ - 1 - y0},
+                                            {x1, height_ - 1 - y1},
+                                            {x2, height_ - 1 - y2},
+                                            {x0, height_ - 1 - y0}},
+                             4);
+}
+int G_rectangle(int xlow, int ylow, int width, int height) {
+  SDL_Rect rect = {xlow, height_ - 1 - ylow - height, width, height};
+  return SDL_RenderDrawRect(renderer_, &rect);
+}
+int G_circle(int a, int b, int r) {
+  double theta = 0, dtheta = (3.1415 / 50.0);
+  SDL_Point points[100];
+  int n = 0;
+  for (theta = 0.0; theta < (3.1415 * 2.0); theta += dtheta) {
+    points[n] = (SDL_Point){(int)(r * cos(theta)) + a,
+                            height_ - 1 - ((int)(r * sin(theta)) + b)};
+    n++;
+  }
+  int ret = SDL_RenderDrawLines(renderer_, points, 100);
+  ret &= SDL_RenderDrawLine(renderer_, points[0].x, points[0].y, points[99].x,
+                            points[99].y);
+  return ret;
+}
+int G_polygon(double* x, double* y, int numpts) {
+  if (numpts <= 0) return 0;
+  SDL_Point* points = (SDL_Point*)malloc(numpts * sizeof(SDL_Point));
+  for (int i = 0; i < numpts; ++i) {
+    points[i] = (SDL_Point){(int)x[i], height_ - 1 - (int)y[i]};
+  }
+  int ret = SDL_RenderDrawLines(renderer_, points, numpts);
+  ret &= SDL_RenderDrawLine(renderer_, points[0].x, points[0].y,
+                            points[numpts - 1].x, points[numpts - 1].y);
+  free(points);
+  return ret;
+}
+int Gi_polygon(int* x, int* y, int numpts) {
+  if (numpts <= 0) return 0;
+  SDL_Point* points = (SDL_Point*)malloc(numpts * sizeof(SDL_Point));
+  for (int i = 0; i < numpts; ++i) {
+    points[i] = (SDL_Point){x[i], height_ - 1 - y[i]};
+  }
+  int ret = SDL_RenderDrawLines(renderer_, points, numpts);
+  ret &= SDL_RenderDrawLine(renderer_, points[0].x, points[0].y,
+                            points[numpts - 1].x, points[numpts - 1].y);
+  free(points);
+  return ret;
+}
+
+int G_fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2) {
+  return Gi_fill_polygon((int[3]){x0, x1, x2}, (int[3]){y0, y1, y2}, 3);
+}
+int G_fill_rectangle(int xlow, int ylow, int width, int height) {
+  SDL_Rect rect = {xlow, height_ - 1 - ylow - height, width, height};
+  return SDL_RenderFillRect(renderer_, &rect);
+}
+int G_fill_circle(int a, int b, int r) {
+  double theta = 0, dtheta = (3.1415 / 50.0);
+  int x_array[100];
+  int y_array[100];
+  int n = 0;
+  for (theta = 0.0; theta < (3.1415 * 2.0); theta += dtheta) {
+    x_array[n] = (r * cos(theta)) + a;
+    y_array[n] = (r * sin(theta)) + b;
+    n++;
+  }
+  return Gi_fill_polygon(x_array, y_array, 100);
+}
+int G_fill_polygon(double* x, double* y, int n) {
+  int i;
+  double min = height_, max = 0;
+  for (i = 0; i < n; i++) {
+    if (y[i] < min) {
+      min = y[i];
+    }
+    if (y[i] > max) {
+      max = y[i];
+    }
+  }
+  double row;
+  for (row = min + 0.01; row < max; row += 1) {
+    double inter[n];
+    int index = 0;
+    for (i = 0; i < n; i++) {
+      int j = (i + 1) % n;
+      if ((y[i] <= row && y[j] >= row) || (y[i] >= row && y[j] <= row)) {
+        inter[index] = (row - (double)y[i]) * (((double)x[i] - (double)x[j]) /
+                                               ((double)y[i] - (double)y[j])) +
+                       (double)x[i];
+        index++;
+      }
+    }
+    for (i = 0; i < index; i++) {
+      int j;
+      for (j = 0; j < index; j++) {
+        if (inter[j] > inter[i]) {
+          double tmp = inter[i];
+          inter[i] = inter[j];
+          inter[j] = tmp;
+        }
+      }
+    }
+    for (i = 0; i < index - 1; i += 2) {
+      SDL_RenderDrawLine(renderer_, (int)inter[i], height_ - 1 - (int)row,
+                         (int)inter[i + 1], height_ - 1 - (int)row);
+    }
+  }
+  return 1;
+}
+
+int Gi_fill_polygon(int* x, int* y, int n) {
+  int i;
+  double min = height_, max = 0;
+  for (i = 0; i < n; i++) {
+    if (y[i] < min) {
+      min = y[i];
+    }
+    if (y[i] > max) {
+      max = y[i];
+    }
+  }
+  double row;
+  for (row = min + 0.01; row < max; row += 1) {
+    double inter[n];
+    int index = 0;
+    for (i = 0; i < n; i++) {
+      int j = (i + 1) % n;
+      if ((y[i] <= row && y[j] >= row) || (y[i] >= row && y[j] <= row)) {
+        inter[index] = (row - (double)y[i]) * (((double)x[i] - (double)x[j]) /
+                                               ((double)y[i] - (double)y[j])) +
+                       (double)x[i];
+        index++;
+      }
+    }
+    for (i = 0; i < index; i++) {
+      int j;
+      for (j = 0; j < index; j++) {
+        if (inter[j] > inter[i]) {
+          double tmp = inter[i];
+          inter[i] = inter[j];
+          inter[j] = tmp;
+        }
+      }
+    }
+    for (i = 0; i < index - 1; i += 2) {
+      SDL_RenderDrawLine(renderer_, (int)inter[i], height_ - 1 - (int)row,
+                         (int)inter[i + 1], height_ - 1 - (int)row);
+    }
+  }
+  return 1;
+}
+
+int Gi_wait_click(int p[2]) {
+  G_display_image();
+  SDL_Event event;
+  while (event.type != SDL_MOUSEBUTTONDOWN) {
+    SDL_WaitEvent(&event);
+  }
+  p[0] = event.button.x;
+  p[1] = height_ - event.button.y;
+  return 1;
+}
+int G_wait_click(double p[2]) {
+  G_display_image();
+  SDL_Event event;
+  while (event.type != SDL_MOUSEBUTTONDOWN) {
+    SDL_WaitEvent(&event);
+  }
+  p[0] = (double)event.button.x;
+  p[1] = (double)(height_ - event.button.y);
+  return 1;
+}
+int G_wait_key() {
+  G_display_image();
+  SDL_Event event;
+  while (event.type != SDL_KEYDOWN) {
+    SDL_WaitEvent(&event);
+  }
+  return event.key.keysym.sym;
 }
 
 #endif

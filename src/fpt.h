@@ -8,7 +8,7 @@
 #include <string.h>
 
 #define FPT_VERSION_MAJOR 2
-#define FPT_VERSION_MINOR 0
+#define FPT_VERSION_MINOR 2
 
 void G_version(unsigned* major, unsigned* minor);
 void G_sleep(double s);
@@ -27,13 +27,13 @@ int G_point(int x, int y);
 
 int G_line(int x0, int y0, int x1, int y1);
 int G_triangle(int x0, int y0, int x1, int y1, int x2, int y2);
-int G_rectangle(int xleft, int yleft, int width, int height);
+int G_rectangle(int xlow, int ylow, int width, int height);
 int G_circle(int a, int b, int r);
 int G_polygon(double* x, double* y, int numpts);
 int Gi_polygon(int * x, int * y, int numpts);
 
 int G_fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2);
-int G_fill_rectangle(int xleft, int yleft, int width, int height);
+int G_fill_rectangle(int xlow, int ylow, int width, int height);
 int G_fill_circle(int a, int b, int r);
 int G_fill_polygon(double* x, double* y, int numpts);
 int Gi_fill_polygon(int * x, int * y, int numpts);
