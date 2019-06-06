@@ -224,7 +224,7 @@ int G_circle(int a, int b, int r) {
     e1 = e + y + y + 1;
     e2 = e1 - x - x + 1;
     y = y + 1;
-    if (fabs(e2) < fabs(e1)) {
+    if (abs(e2) < abs(e1)) {
       x = x - 1;
       e = e2;
     } else {
@@ -288,7 +288,7 @@ int G_fill_circle(int a, int b, int r) {
     e1 = e + y + y + 1;
     e2 = e1 - x - x + 1;
     y = y + 1;
-    if (fabs(e2) < fabs(e1)) {
+    if (abs(e2) < abs(e1)) {
       x = x - 1;
       e = e2;
     } else {
@@ -344,6 +344,7 @@ int G_single_pixel_horizontal_line(int x0, int x1, int y) {
 int G_clear() {
   XFillRectangle(display_, pixmap_, pixmap_context_, 0, 0, width_, height_);
   XFlush(display_);
+  return 1;
 }
 
 void fputintB(int x, FILE* fp) {
@@ -417,6 +418,7 @@ int G_save_image_to_file(void* filename) {
   write_xwd(pxim, fp);
 
   fclose(fp);
+  return 1;
 }
 
 int G_handle_events(int* p) {
@@ -461,6 +463,7 @@ int G_handle_events(int* p) {
         return 0;
     }
   } while (XPending(display_));
+  return 0;
 }
 
 void G_clear_events() {

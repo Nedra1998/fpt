@@ -1,11 +1,11 @@
 #ifndef FPT_H_
 #define FPT_H_
 
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>
+#include <time.h>
 
 #define FPT_VERSION_MAJOR 2
 #define FPT_VERSION_MINOR 2
@@ -30,13 +30,13 @@ int G_triangle(int x0, int y0, int x1, int y1, int x2, int y2);
 int G_rectangle(int xlow, int ylow, int width, int height);
 int G_circle(int a, int b, int r);
 int G_polygon(double* x, double* y, int numpts);
-int Gi_polygon(int * x, int * y, int numpts);
+int Gi_polygon(int* x, int* y, int numpts);
 
 int G_fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2);
 int G_fill_rectangle(int xlow, int ylow, int width, int height);
 int G_fill_circle(int a, int b, int r);
 int G_fill_polygon(double* x, double* y, int numpts);
-int Gi_fill_polygon(int * x, int * y, int numpts);
+int Gi_fill_polygon(int* x, int* y, int numpts);
 
 int G_single_pixel_horizontal_line(int x0, int x1, int y);
 
@@ -54,6 +54,5 @@ int G_wait_key();
 int Gi_poll_click(int p[2]);
 int G_poll_click(double p[2]);
 int G_poll_key();
-
 
 #endif  // FPT_H_

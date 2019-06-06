@@ -1,8 +1,8 @@
-if(NOT EXISTS "/home/arden/Programming/c/fpt/build/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: /home/arden/Programming/c/fpt/build/install_manifest.txt")
-endif(NOT EXISTS "/home/arden/Programming/c/fpt/build/install_manifest.txt")
+if(NOT EXISTS "/home/arden/programming/c/fpt/build/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: /home/arden/programming/c/fpt/build/install_manifest.txt")
+endif(NOT EXISTS "/home/arden/programming/c/fpt/build/install_manifest.txt")
 
-file(READ "/home/arden/Programming/c/fpt/build/install_manifest.txt" files)
+file(READ "/home/arden/programming/c/fpt/build/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach(file ${files})
   message(STATUS "Uninstalling $ENV{DESTDIR}${file}")
