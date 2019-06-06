@@ -5,14 +5,14 @@ HAS_GIT=$([ $(command -v git) ] && echo "1" || echo "0")
 HAS_CMAKE=$([ $(command -v cmake) ] && echo "1" || echo "0")
 # HAS_SDL=$([ ! -f /usr/lib/libSDL.so ] && echo "1" || echo "0")
 
-if [[ "$OS" == "darwin" ]]; then
+if [[ "$OS" =~ darwin.* ]]; then
   HAS_BREW=$(command -v brew)
   if [[ -z "$HAS_BREW" ]]; then
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   fi
   HAS_XQUARTZ=$(brew ls --versions xquartz)
-  if [[ ! -z "$HAS_XQUARTZ" ]]; then
-    brew install xquartz
+  if [[ -z "$HAS_XQUARTZ" ]]; then
+    brew cask install xquartz
   fi
   if [[ $HAS_GIT == 0 ]]; then
     brew install git
@@ -40,7 +40,7 @@ elif [[ "$OS" == "linux-gnu" ]]; then
   fi
 fi
 
-git clone https://github.com/ardenrasmussen/fpt .fpt && cd .fpt && cmake . && make && cd ../ && rm .fpt -rf
+# git clone https://github.com/ardenrasmussen/fpt .fpt && cd .fpt && cmake . && make && cd ../ && rm .fpt -rf
 # cd .fpt
 # cmake .
 # sudo make install
