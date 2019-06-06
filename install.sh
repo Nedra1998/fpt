@@ -11,7 +11,7 @@ if [[ "$OS" == "darwin" ]]; then
   if [[ -z "$HAS_BREW" ]]; then
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   fi
-  HAS_XQUARTZ=$(brew ls --version xquartz)
+  HAS_XQUARTZ=$(brew ls --versions xquartz)
   if [[ -z "$HAS_XQUARTZ" ]]; then
     brew install xquartz
   fi
