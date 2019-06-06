@@ -3,8 +3,7 @@
 OS="$OSTYPE"
 HAS_GIT=$([ $(command -v git) ] && echo "1" || echo "0")
 HAS_CMAKE=$([ $(command -v cmake) ] && echo "1" || echo "0")
-HAS_SDL=$([ ! -f /usr/lib/libSDL.so ] && echo "1" || echo "0")
-echo "$HAS_GIT $HAS_CMAKE $HAS_SDL"
+# HAS_SDL=$([ ! -f /usr/lib/libSDL.so ] && echo "1" || echo "0")
 
 if [[ "$OS" == "darwin" ]]; then
   HAS_BREW=$(command -v brew)
@@ -12,7 +11,7 @@ if [[ "$OS" == "darwin" ]]; then
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   fi
   HAS_XQUARTZ=$(brew ls --versions xquartz)
-  if [[ -z "$HAS_XQUARTZ" ]]; then
+  if [[ ! -z "$HAS_XQUARTZ" ]]; then
     brew install xquartz
   fi
   if [[ $HAS_GIT == 0 ]]; then
