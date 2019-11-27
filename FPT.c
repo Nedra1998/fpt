@@ -4,12 +4,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef __linux__
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
-#endif
 
 static int __win_width;
 static int __win_height;
@@ -19,7 +17,6 @@ static int __tmp_width;
 static int __tmp_height;
 static int __depth;
 
-#ifdef __linux__
 static Display* __display;
 static Window __root_window;
 static int __screen_number;
@@ -30,7 +27,6 @@ static XID __drawable;
 static GC __window_context;
 static GC __pixmap_context;
 static GC __tmp_contexxt;
-#endif
 
 static int __red;
 static int __green;
@@ -38,7 +34,6 @@ static int __blue;
 static uint32_t __current_color_pixel;
 static uint32_t __last_clear_buffer_pixel;
 
-#ifdef __linux__
 void x_clear_buffer() {
   XFillRectangle(__display, __drawable, __pixmap_context, 0, 0, __pix_width,
                  __pix_height);
@@ -303,7 +298,6 @@ void x_term() {
   XFreePixmap(__display, __pixmap);
   XCloseDisplay(__display);
 }
-#endif
 
 void (*G_close)();
 void (*G_display_image)();
@@ -314,7 +308,6 @@ void(*G_pixel)(double, double);
 void(*G_point)(double, double);
 
 int G_init_graphics(double w, double h) {
-#ifdef __linux__
   G_close = x_term;
   G_display_image = x_copy_buffer_and_flush;
   Gi_events = x_get_events;
@@ -322,7 +315,6 @@ int G_init_graphics(double w, double h) {
   G_pixel = x_point;
   G_point = x_safe_point;
   return x_init(w, h);
-#endif
 }
 
 int G_wait_key() {

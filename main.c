@@ -3,6 +3,9 @@
 
 #include "FPT.c"
 
+// TO COMPILE ON MAC, Install XQuartz from https://www.xquartz.org/
+// And run cc main.c -I/usr/X11/include -L/usr/X11/lib -lX11
+
 int main(int argc, char* argv[]) {
   G_init_graphics(500, 500);
   int key = ' ';
