@@ -34,7 +34,7 @@
 #include <X11/Xutil.h>  // for XComposeStatus
 #include <X11/keysym.h>
 
-int Set_Color_Rgb_X(int r, int g, int b);
+void Set_Color_Rgb_X(int r, int g, int b);
 
 typedef XImage* XImagePointer;
 static int Xx_Win_width;
@@ -62,8 +62,7 @@ static int Current_Blue_Int;
 static unsigned long int Current_Color_Pixel;
 static unsigned long int Last_Clear_Buffer_Pixel;
 
-int Clear_Buffer_X() {
-  unsigned long int p;
+void Clear_Buffer_X() {
   XFillRectangle(XxDisplay, XxDrawable, XxPixmapContext, 0, 0, Xx_Pix_width,
                  Xx_Pix_height);
   XFlush(XxDisplay);
@@ -116,7 +115,6 @@ int Resize_window_X_helper(int request[2])
   if ((ww > Xx_Pix_width) || (hh > Xx_Pix_height)) {
     // at least one of the dimensions of the new window
     // is larger than the current pixmap
-    // printf("at least one dimension of new win is larger than pixmaxp\n") ;
 
     // create a tmp pixmap and copy current pixmap to it
     Xx_Tmp_width = Xx_Pix_width;
@@ -187,7 +185,7 @@ int Resize_window_X(int request[2], int actual[2])
   return s;
 }
 
-int Copy_Buffer_X() {
+void Copy_Buffer_X() {
   XCopyArea(XxDisplay, XxPixmap, XxWindow, XxWindowContext, 0,
             Xx_Pix_height - Xx_Win_height, Xx_Win_width, Xx_Win_height, 0, 0);
 }
@@ -197,9 +195,6 @@ int Init_X(double Dswidth, double Dsheight) {
   int sheight = (int)Dsheight;
 
   XGCValues vals;
-  Colormap XxColormap;
-  XColor XxColor;
-  int i;
 
   XxDisplay = XOpenDisplay("\0");
   XxRootWindow = DefaultRootWindow(XxDisplay);
@@ -267,8 +262,6 @@ int Init_X(double Dswidth, double Dsheight) {
   XxPixmapContext = XCreateGC(XxDisplay, XxPixmap, 0, 0);
   if (!XxPixmapContext) return 0;
 
-  XxColormap = DefaultColormap(XxDisplay, XxScreenNumber);
-
   XxFontInfo = XLoadQueryFont(XxDisplay, XxFont);
   /* XSetFont(XxDisplay, XxWindowContext, XxFontInfo->fid); */
   /* XSetFont(XxDisplay, XxPixmapContext, XxFontInfo->fid); */
@@ -289,7 +282,7 @@ int Init_X(double Dswidth, double Dsheight) {
   return 1;
 }
 
-int Close_Down_X() {
+void Close_Down_X() {
   XDestroyWindow(XxDisplay, XxWindow);
   XFreeGC(XxDisplay, XxWindowContext);
   XFreeGC(XxDisplay, XxPixmapContext);
@@ -297,13 +290,13 @@ int Close_Down_X() {
   XCloseDisplay(XxDisplay);
 }
 
-int Copy_Buffer_And_Flush_X() {
+void Copy_Buffer_And_Flush_X() {
   Copy_Buffer_X();
 
   XFlush(XxDisplay);
 }
 
-int Send_Expose_Event() {
+void Send_Expose_Event() {
   XExposeEvent e;
   e.type = Expose;
   e.send_event = 1;
@@ -314,19 +307,14 @@ int Send_Expose_Event() {
 }
 
 int Handle_Events_X(int* px, int* py) {
-  int DummyInt;
-  Window DummyWindow;
   XEvent event;
   int x, y;
   KeySym keysym;
   char buffer[10];
   int bufsize = 10;
   XComposeStatus compose;
-  int ww, hh;
   int retval;
   int request[2], sig;
-
-  // printf("enter Handle_Events_X\n") ;
 
 MORE_EVENTS:
 
@@ -342,11 +330,8 @@ MORE_EVENTS:
   // we check beforehand with XPending to see if there
   // is anything in the queue
 
-  // printf("event.type == %d\n",event.type) ;
-
   switch (event.type) {
     case Expose:
-      // printf("Expose\n") ;
 
       Copy_Buffer_And_Flush_X();
       // this is new ... when the window is uncovered
@@ -358,7 +343,6 @@ MORE_EVENTS:
       break;
 
     case MotionNotify:
-      // printf("MotionNotify\n") ;
       // while this gives coords relative to the upper left
       // of the window being displayed...so, for example,
       // suppose we target mouse movement around the center
@@ -389,7 +373,6 @@ MORE_EVENTS:
       break;
 
     case ButtonPress:
-      // printf("ButtonPress\n") ;
       // while this gives coords relative to the upper left
       // of the window being displayed...so, for example,
       // suppose we click the mouse at the center
@@ -407,7 +390,6 @@ MORE_EVENTS:
       break;
 
     case ConfigureNotify:
-      // printf("ConfigureNotify\n") ;
       // check for window resizing
       request[0] = event.xconfigure.width;
       request[1] = event.xconfigure.height;
@@ -419,7 +401,6 @@ MORE_EVENTS:
       break;
 
     case KeyPress:
-      // printf("KeyPress\n") ;
       XLookupString(&(event.xkey), buffer, bufsize, &keysym, &compose);
       *px = 0;
       *py = 0;
@@ -428,7 +409,6 @@ MORE_EVENTS:
       break;
 
     default:
-      // printf("default\n") ;
       *px = 0;
       *py = 0;
       retval = -1000;
@@ -436,7 +416,6 @@ MORE_EVENTS:
       break;
   }
 
-  // printf("none of the above\n") ;
   *px = 0;
   *py = 0;
   retval = -2000;
@@ -451,7 +430,6 @@ MORE_EVENTS:
 
 LLL:;
 
-  // printf("exit Handle_Events_X\n") ;
   return retval;
 }
 
@@ -483,7 +461,7 @@ int Get_Events_DX(double* d)
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
-int Point_X(double Dx, double Dy) {
+void Point_X(double Dx, double Dy) {
   int x, y;
   x = (int)Dx;
   y = (int)Dy;
@@ -502,7 +480,7 @@ int Safe_Point_X(double Dx, double Dy) {
   return 1;
 }
 
-int Line_X(double Dxs, double Dys, double Dxe, double Dye) {
+void Line_X(double Dxs, double Dys, double Dxe, double Dye) {
   int xs = (int)Dxs;
   int ys = (int)Dys;
   int xe = (int)Dxe;
@@ -512,7 +490,7 @@ int Line_X(double Dxs, double Dys, double Dxe, double Dye) {
             xe, Xx_Pix_height - 1 - ye);
 }
 
-int Safe_Line_X(double Dxs, double Dys, double Dxe, double Dye) {
+void Safe_Line_X(double Dxs, double Dys, double Dxe, double Dye) {
   int ixs = (int)Dxs;
   int iys = (int)Dys;
   int ixe = (int)Dxe;
@@ -526,8 +504,6 @@ int Safe_Line_X(double Dxs, double Dys, double Dxe, double Dye) {
       (iye >= 0) && (iye < Xx_Pix_height)) {
     XDrawLine(XxDisplay, XxDrawable, XxPixmapContext, ixs,
               Xx_Pix_height - 1 - iys, ixe, Xx_Pix_height - 1 - iye);
-
-    return 1;
   }
 
   xs = ixs;
@@ -656,11 +632,10 @@ int Safe_Line_X(double Dxs, double Dys, double Dxe, double Dye) {
             (int)(Xx_Pix_height - 1 - ye));
 
 CLend:
-
-  return 1;
+  return;
 }
 
-int Rectangle_X(double Dxlow, double Dylow, double Dwidth, double Dheight) {
+void Rectangle_X(double Dxlow, double Dylow, double Dwidth, double Dheight) {
   int xlow = (int)Dxlow;
   int ylow = (int)Dylow;
   int width = (int)Dwidth;
@@ -670,8 +645,8 @@ int Rectangle_X(double Dxlow, double Dylow, double Dwidth, double Dheight) {
                  Xx_Pix_height - ylow - height, width, height);
 }
 
-int Fill_Rectangle_X(double Dxlow, double Dylow, double Dwidth,
-                     double Dheight) {
+void Fill_Rectangle_X(double Dxlow, double Dylow, double Dwidth,
+                      double Dheight) {
   int xlow = (int)Dxlow;
   int ylow = (int)Dylow;
   int width = (int)Dwidth;
@@ -681,8 +656,8 @@ int Fill_Rectangle_X(double Dxlow, double Dylow, double Dwidth,
                  Xx_Pix_height - ylow - height, width, height);
 }
 
-int Triangle_X(double Dx1, double Dy1, double Dx2, double Dy2, double Dx3,
-               double Dy3) {
+void Triangle_X(double Dx1, double Dy1, double Dx2, double Dy2, double Dx3,
+                double Dy3) {
   int x1 = (int)Dx1;
   int y1 = (int)Dy1;
   int x2 = (int)Dx2;
@@ -707,8 +682,8 @@ int Triangle_X(double Dx1, double Dy1, double Dx2, double Dy2, double Dx3,
              CoordModeOrigin);
 }
 
-int Fill_Triangle_X(double Dx1, double Dy1, double Dx2, double Dy2, double Dx3,
-                    double Dy3) {
+void Fill_Triangle_X(double Dx1, double Dy1, double Dx2, double Dy2, double Dx3,
+                     double Dy3) {
   int x1 = (int)Dx1;
   int y1 = (int)Dy1;
   int x2 = (int)Dx2;
@@ -832,9 +807,6 @@ int Horizontal_Single_Pixel_Line_X(double Dx0, double Dx1, double Dy) {
   int x1 = (int)Dx1;
   int y = (int)Dy;
 
-  int t, x;
-  int j, n;
-
   // protect against an offscreen line
   if (y < 0) return 0;
   if (y >= Xx_Pix_height) return 0;
@@ -850,7 +822,7 @@ int Horizontal_Single_Pixel_Line_X(double Dx0, double Dx1, double Dy) {
   // end protection code
 
   if (x1 < x0) {
-    t = x1;
+    int t = x1;
     x1 = x0;
     x0 = t;
   }
@@ -860,12 +832,12 @@ int Horizontal_Single_Pixel_Line_X(double Dx0, double Dx1, double Dy) {
   return 1;
 }
 
-int Circle_X(double Da, double Db, double Dr) {
+void Circle_X(double Da, double Db, double Dr) {
   int a = (int)Da;
   int b = (int)Db;
   int r = (int)Dr;
 
-  int x, y, e, e1, e2;
+  int x, y, e;
 
   x = r;
   y = 0;
@@ -882,8 +854,8 @@ int Circle_X(double Da, double Db, double Dr) {
     Safe_Point_X(a + y, b - x);
     Safe_Point_X(a - y, b - x);
 
-    e1 = e + y + y + 1;
-    e2 = e1 - x - x + 1;
+    int e1 = e + y + y + 1;
+    int e2 = e1 - x - x + 1;
     y = y + 1;
 
     if (abs(e2) < abs(e1)) {
@@ -894,12 +866,12 @@ int Circle_X(double Da, double Db, double Dr) {
   }
 }
 
-int Fill_Circle_X(double Da, double Db, double Dr) {
+void Fill_Circle_X(double Da, double Db, double Dr) {
   int a = (int)Da;
   int b = (int)Db;
   int r = (int)Dr;
 
-  int x, y, e, e1, e2;
+  int x, y, e;
 
   x = r;
   y = 0;
@@ -912,8 +884,8 @@ int Fill_Circle_X(double Da, double Db, double Dr) {
     Horizontal_Single_Pixel_Line_X(a - y, a + y, b + x);
     Horizontal_Single_Pixel_Line_X(a - y, a + y, b - x);
 
-    e1 = e + y + y + 1;
-    e2 = e1 - x - x + 1;
+    int e1 = e + y + y + 1;
+    int e2 = e1 - x - x + 1;
     y = y + 1;
 
     if (abs(e2) < abs(e1)) {
@@ -944,7 +916,7 @@ int String_Pixel_Width_X(const void* s)
   return XTextWidth(XxFontInfo, (char*)s, len);
 }
 
-int Draw_String_X(const void* s, double Dx, double Dy)
+void Draw_String_X(const void* s, double Dx, double Dy)
 // Draw the string s, with the lower left hand corner at (x,y)
 {
   int x = (int)Dx;
@@ -958,29 +930,14 @@ int Draw_String_X(const void* s, double Dx, double Dy)
               (char*)s, len);
 }
 
-int Get_Current_Dimensions_X(int dimensions[2]) {
+void Get_Current_Dimensions_X(int dimensions[2]) {
   dimensions[0] = Xx_Pix_width;
   dimensions[1] = Xx_Pix_height;
 }
 
-int Get_Current_Dimensions_DX(double dimensions[2]) {
+void Get_Current_Dimensions_DX(double dimensions[2]) {
   dimensions[0] = Xx_Pix_width;
   dimensions[1] = Xx_Pix_height;
-}
-
-int Change_Pen_Dimensions_X(double Dw, double Dh) {
-  printf("Change_Pen_Dimensions_X  not implemented\n");
-  return 0;
-}
-
-int Draw_Text_X(int num_lines_of_text,
-                const void* lines_of_text,  // an array of pointers
-                double startx, double starty, double height,
-                double x_over_y_ratio,
-                double extra_space_between_letters_fraction,
-                double extra_space_between_lines_fraction) {
-  printf("Draw_Text_X  not implemented\n");
-  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1007,8 +964,6 @@ int fgetintB(FILE* fp) {
   char* p;
   int c[4], i;
   int x;
-  char q;
-
   for (i = 3; i >= 0; i--) {
     c[i] = fgetc(fp);
   }
@@ -1016,7 +971,7 @@ int fgetintB(FILE* fp) {
   p = (char*)&x;
 
   for (i = 0; i < 4; i++) {
-    q = c[i];
+    char q = c[i];
     *p = q;
     ;
     p++;
@@ -1126,20 +1081,16 @@ void XImage_To_XWD_File(XImage* pxim, FILE* fp) {
 void XImage_From_XWD_File(XImage* pxim, FILE* fp) {
   // assumes full color but uses full 32 bits per pixel
 
-  int header_size, file_version, format, depth;
+  int format, depth;
   int xoffset, byte_order, bitmap_unit, bitmap_order, bitmap_pad;
-  int bits_per_pixel, bytes_per_line, visual_class;
-  int redmask, greenmask, bluemask;
-  int bitsperrgb, numentriesincolormap, numcolorstructures;
-  int windowwidth, windowheight, windowx, windowy, windowborderwidth;
-  int numbytestowrite;
+  int bits_per_pixel, bytes_per_line;
 
   int width, height;
 
-  int c, numbytestoread;
+  int numbytestoread;
 
-  header_size = fgetintB(fp);
-  file_version = fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
   format = fgetintB(fp);
   depth = fgetintB(fp);
   width = fgetintB(fp);
@@ -1151,24 +1102,24 @@ void XImage_From_XWD_File(XImage* pxim, FILE* fp) {
   bitmap_pad = fgetintB(fp);
   bits_per_pixel = fgetintB(fp);
   bytes_per_line = fgetintB(fp);
-  visual_class = fgetintB(fp);
-  redmask = fgetintB(fp);
-  greenmask = fgetintB(fp);
-  bluemask = fgetintB(fp);
-  bitsperrgb = fgetintB(fp);
-  numentriesincolormap = fgetintB(fp);
-  numcolorstructures = fgetintB(fp);
-  windowwidth = fgetintB(fp);
-  windowheight = fgetintB(fp);
-  windowx = fgetintB(fp);
-  windowy = fgetintB(fp);
-  windowborderwidth = fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
 
   // null terminated window name fleshed out to multiple of 4 bytes
-  c = fgetc(fp);
-  c = fgetc(fp);
-  c = fgetc(fp);
-  c = fgetc(fp);
+  fgetc(fp);
+  fgetc(fp);
+  fgetc(fp);
+  fgetc(fp);
 
   /* ++++++++++++++++++++++++ */
 
@@ -1300,13 +1251,12 @@ int Get_Image_Dimensions_From_File_X(int d[2], void* filename)
   }
 
   // assumes full color but uses full 32 bits per pixel
-  int header_size, file_version, format, depth;
   int width, height;
 
-  header_size = fgetintB(fp);
-  file_version = fgetintB(fp);
-  format = fgetintB(fp);
-  depth = fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
+  fgetintB(fp);
   width = fgetintB(fp);
   height = fgetintB(fp);
 
@@ -1370,7 +1320,7 @@ int Get_Pixel_SAFE_X(double Dx, double Dy, int pixel[1])
 // 2 -> middle of [0.50, 0.75)
 // 3 -> middle of [0.75, 1.00)
 
-int Set_Color_Rgb_X(int r, int g, int b) {
+void Set_Color_Rgb_X(int r, int g, int b) {
   unsigned long int p;
 
   if (r < 0)
@@ -1396,7 +1346,7 @@ int Set_Color_Rgb_X(int r, int g, int b) {
   Current_Color_Pixel = p;
 }
 
-int Set_Color_Rgb_DX(double dr, double dg, double db) {
+void Set_Color_Rgb_DX(double dr, double dg, double db) {
   int r, g, b;
 
   if (dr < 0.0)
@@ -1419,17 +1369,13 @@ int Set_Color_Rgb_DX(double dr, double dg, double db) {
   Set_Color_Rgb_X(r, g, b);
 }
 
-int Convert_Pixel_To_rgbI_X(int pixel, int rgbI[3])
-// rgbI[] values in 0-255
-// return 1 if successful, else 0
-{
+void Convert_Pixel_To_rgbI_X(int pixel, int rgbI[3]) {
   rgbI[2] = pixel & 0xff;
   rgbI[1] = (pixel >> 8) & 0xff;
   rgbI[0] = (pixel >> 16) & 0xff;
-  return 1;
 }
 
-int Convert_rgbI_To_rgb_X(int rgbI[3], double rgb[3])
+void Convert_rgbI_To_rgb_X(int rgbI[3], double rgb[3])
 // convert rgbI[] in 0-255 to rgb[] in 0.0 - 1.0
 // return 1 if successful, else 0
 {
@@ -1441,7 +1387,7 @@ int Convert_rgbI_To_rgb_X(int rgbI[3], double rgb[3])
   rgb[2] = rgbI[2] / 256.0 + d;
 }
 
-int XImage_to_Display(XImage* pxim, double Dx, double Dy)
+void XImage_to_Display(XImage* pxim, double Dx, double Dy)
 // Put lower left corner of file into the graphics window at (x,y).
 // return 1 if successful else 0
 {
@@ -1454,7 +1400,6 @@ int XImage_to_Display(XImage* pxim, double Dx, double Dy)
 
   image_width = pxim->width;
   image_height = pxim->height;
-  //  printf("%d %d\n",image_width,image_height) ;
 
   if (image_height <= Xx_Pix_height - y) {
     transfer_height = image_height;
@@ -1484,8 +1429,6 @@ int XImage_to_Display(XImage* pxim, double Dx, double Dy)
   XPutImage(XxDisplay, XxDrawable, XxPixmapContext, pxim, srcx, srcy, destx,
             desty, transfer_width, transfer_height);
   //	     Xx_Pix_width, Xx_Pix_height) ;
-
-  return 1;
 }
 
 XImagePointer Get_ximage_of_display()
@@ -1516,10 +1459,10 @@ XImagePointer Get_ximage_of_display()
 // Xx header file has these pointers declared as "extern"
 /////////////////////////////////////////////////////////////////////
 
-int (*G_close)();
+void (*G_close)();
 // terminate the graphics
 
-int (*G_display_image)();
+void (*G_display_image)();
 // make drawing visible if it already isn't
 // in some environments, this might not do anything
 // in others it might copy a buffer and/or do other
@@ -1536,21 +1479,18 @@ int (*G_resize_window)(int request[2], int actual[2]);
 // actual[1] = height you actuall got
 // added jan 23, 2014
 
-int (*G_change_pen_dimensions)(double w, double h);
-// return 0 if illegal w,h specified, otherwise 1
-
-int (*Gi_get_current_window_dimensions)(int* dimentsions);
+void (*Gi_get_current_window_dimensions)(int* dimentsions);
 // return 1 if successful
 // needs to be passed an array of two ints
 
-int (*G_get_current_window_dimensions)(double* dimentsions);
+void (*G_get_current_window_dimensions)(double* dimentsions);
 // return 1 if successful
 // needs to be passed an array of two doubles
 
-int (*Gi_rgb)(int r, int g, int b);
+void (*Gi_rgb)(int r, int g, int b);
 // assumes r,g,b are ints in [0,255]
 
-int (*G_rgb)(double r, double g, double b);
+void (*G_rgb)(double r, double g, double b);
 // assumes r,g,b are doubles in [0, 1]
 
 /////////////////////////////////////////////////////////////////////
@@ -1558,7 +1498,7 @@ int (*G_rgb)(double r, double g, double b);
 //  plot a single pixel
 /////////////////////////////////////////////////////////////////////
 
-int (*G_pixel)(double x, double y);
+void (*G_pixel)(double x, double y);
 // return 1 always
 // This is not guaranteed to be safe
 
@@ -1568,11 +1508,11 @@ int (*G_point)(double x, double y);
 // Draws a thick point whose dimensions are controlled by
 // int G_change_pen_dimensions (double w, double h).
 
-int (*G_circle)(double a, double b, double r);
+void (*G_circle)(double a, double b, double r);
 // always return 1
 // capable of drawing a circle with thick outline
 
-int (*G_unclipped_line)(double ixs, double iys, double ixe, double iye);
+void (*G_unclipped_line)(double ixs, double iys, double ixe, double iye);
 // return 1 always
 // This is SAFE.
 // Capable of drawing a thick line.
@@ -1580,7 +1520,7 @@ int (*G_unclipped_line)(double ixs, double iys, double ixe, double iye);
 // but because it is unclipped, this code could waste a great
 // deal of time trying to plot lots of points outside the window.
 
-int (*G_line)(double ixs, double iys, double ixe, double iye);
+void (*G_line)(double ixs, double iys, double ixe, double iye);
 // return 0 if line clipped away entirely, else return 1
 // This is SAFE.
 // Capable of drawing a thick line.
@@ -1599,12 +1539,12 @@ int (*G_polygon)(double* x, double* y, double numpts);
 // return 1 always
 // capable of drawing a polygon with thick outline
 
-int (*G_triangle)(double x0, double y0, double x1, double y1, double x2,
-                  double y2);
+void (*G_triangle)(double x0, double y0, double x1, double y1, double x2,
+                   double y2);
 // return value it inherits from G_polygon
 // capable of drawing a triangle with thick outline
 
-int (*G_rectangle)(double xleft, double yleft, double width, double height);
+void (*G_rectangle)(double xleft, double yleft, double width, double height);
 // return value it inherits from G_polygon
 // capable of drawing a rectangle with thick outline
 
@@ -1614,13 +1554,12 @@ int (*G_rectangle)(double xleft, double yleft, double width, double height);
 /////////////////////////////////////////////////////////////////////
 
 int (*G_single_pixel_horizontal_line)(double x0, double x1, double y);
-// return 1 always
 // This is not guaranteed to be safe
 
-int (*G_clear)();
+void (*G_clear)();
 // return 1 always
 
-int (*G_fill_circle)(double a, double b, double r);
+void (*G_fill_circle)(double a, double b, double r);
 // always return 1
 
 int (*G_unclipped_fill_polygon)(double* xx, double* yy, double n);
@@ -1640,12 +1579,12 @@ int (*G_fill_polygon)(double* xx, double* yy, double n);
 // This is SAFE
 // AND it clips
 
-int (*G_fill_triangle)(double x0, double y0, double x1, double y1, double x2,
-                       double y2);
+void (*G_fill_triangle)(double x0, double y0, double x1, double y1, double x2,
+                        double y2);
 // return value it inherits from G_fill_polygon
 
-int (*G_fill_rectangle)(double xleft, double yleft, double width,
-                        double height);
+void (*G_fill_rectangle)(double xleft, double yleft, double width,
+                         double height);
 // return value it inherits from G_fill_polygon
 
 int (*G_font_pixel_height)();
@@ -1659,17 +1598,10 @@ int (*G_font_pixel_height)();
 int (*G_string_pixel_width)(const void* s);
 // return the length in pixles of the string s
 
-int (*G_draw_string)(const void* one_line_of_text, double LLx, double LLy);
+void (*G_draw_string)(const void* one_line_of_text, double LLx, double LLy);
 // draw a single line of text beginning at (LLx,LLy) which specifies
 // the coordinates of the lower left corner of the bounding box
 // of the text
-
-int (*G_draw_text)(int num_lines_of_text,
-                   const void* lines_of_text,  // an array of pointers
-                   double startx, double starty, double height,
-                   double x_over_y_ratio,
-                   double extra_space_between_letters_fraction,
-                   double extra_space_between_lines_fraction);
 
 int (*G_save_image_to_file)(const void* filename);
 // return 1 if successful, else 0
@@ -1684,13 +1616,11 @@ int (*G_get_pixel)(double x, double y);
 int (*G_get_pixel_SAFE)(double x, double y, int pixel[1]);
 // return 1 if successful, else 0
 
-int (*G_convert_pixel_to_rgbI)(int pixel, int rgbI[3]);
+void (*G_convert_pixel_to_rgbI)(int pixel, int rgbI[3]);
 // rgbI[] values in 0-255
-// return 1 if successful, else 0
 
-int (*G_convert_rgbI_to_rgb)(int rgbI[3], double rgb[3]);
+void (*G_convert_rgbI_to_rgb)(int rgbI[3], double rgb[3]);
 // convert rgbI[] in 0-255 to rgb[] in 0.0 - 1.0
-// return 1 if successful, else 0
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -1716,8 +1646,6 @@ int G_init_graphics(double w, double h)
   G_events = Get_Events_DX;
 
   G_resize_window = Resize_window_X;
-
-  G_change_pen_dimensions = Change_Pen_Dimensions_X;
 
   Gi_get_current_window_dimensions = Get_Current_Dimensions_X;
 
@@ -1767,8 +1695,6 @@ int G_init_graphics(double w, double h)
   G_string_pixel_width = String_Pixel_Width_X;
 
   G_draw_string = Draw_String_X;
-
-  G_draw_text = Draw_Text_X;
 
   G_save_image_to_file = Save_Image_To_File_X;
 
@@ -1847,9 +1773,7 @@ static int sector(double xcenter, double ycenter, double radius,
                   double start_radians, double end_radians, double* x,
                   double* y, int num_pts_in_full_circle) {
   int num, j;
-  double theta, delta;
-
-  //  printf("start = %lf  end = %lf\n",start_radians,end_radians) ;
+  double delta;
 
   delta = end_radians - start_radians;
   if (delta < 0) return 0;
@@ -1857,21 +1781,15 @@ static int sector(double xcenter, double ycenter, double radius,
 
   num = (int)(num_pts_in_full_circle * delta / (2 * M_PI));
 
-  //  printf("delta = %lf  num = %d\n",delta,num) ;
-
   if (num < 1) {
     num = 1;
   } else if (num > 500) {
     num = 500;
   }
 
-  //  printf("new num = %d\n",num) ;
-
   j = 0;
   while (j <= num) {
-    theta = start_radians + j * delta / num;
-
-    // printf("j = %d  theta = %lf\n",j,theta) ;
+    double theta = start_radians + j * delta / num;
 
     x[j] = xcenter + radius * cos(theta);
     y[j] = ycenter + radius * sin(theta);
@@ -1931,7 +1849,7 @@ int G_fill_sector(double xcenter, double ycenter, double radius,
 
 static double mouse_values[2];
 
-int G_wait_mouse()
+void G_wait_mouse()
 // save off mouse click in reserved variables
 {
   G_wait_click(mouse_values);
@@ -1997,13 +1915,13 @@ int get_timeD(double* hms)
   return s;
 }
 
-int get_time(double* hms)
+void get_time(double* hms)
 // synonym for get_timeD
 {
   get_timeD(hms);
 }
 
-int G_get_time(double* hms) {
+void G_get_time(double* hms) {
   // another synonym for get_timeD
   get_timeD(hms);
 }

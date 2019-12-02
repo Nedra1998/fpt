@@ -13,8 +13,6 @@ static int __win_width;
 static int __win_height;
 static int __pix_width;
 static int __pix_height;
-static int __tmp_width;
-static int __tmp_height;
 static int __depth;
 
 static Display* __display;
@@ -22,11 +20,9 @@ static Window __root_window;
 static int __screen_number;
 static Window __window;
 static Pixmap __pixmap;
-static Pixmap __tmp_pixmap;
 static XID __drawable;
 static GC __window_context;
 static GC __pixmap_context;
-static GC __tmp_contexxt;
 
 static int __red;
 static int __green;
@@ -66,7 +62,6 @@ void x_copy_buffer_and_flush() {
 
 int x_handle_events(int* px, int* py) {
   int x, y;
-  int retval;
   static int buff_size = 10;
   char buffer[buff_size];
   XEvent event;
