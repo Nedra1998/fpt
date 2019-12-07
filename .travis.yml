@@ -1,0 +1,26 @@
+language: c
+compiler: clang
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      sudo: false
+      name: "X11 libraries"
+      addons:
+        apt:
+          packages:
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+    - os: osx
+      sudo: false
+      name: "Cocoa libraries"
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cmake --build .
+notifications:
+  on_success: never
+  on_failure: always
