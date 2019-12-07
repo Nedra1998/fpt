@@ -21,7 +21,7 @@ script:
 - mkdir build
 - cd build
 - cmake ..
-- cmake --build .
+- cmake --build . -- package
 notifications:
   on_success: never
   on_failure: always
@@ -33,4 +33,5 @@ deploy:
   file: build/FPT-*
   on:
     repo: ardenrasmussen/fpt
+    tags: true
     branch: glfw
