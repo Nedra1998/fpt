@@ -3,25 +3,34 @@ language: c
 compiler: clang
 jobs:
   include:
-    - os: linux
-      dist: xenial
-      name: "X11 libraries"
-      addons:
-        apt:
-          packages:
-            - mesa-common-dev
-            - libgl1-mesa-dev
-            - libxrandr-dev
-            - libxinerama-dev
-            - libxcursor-dev
-            - libxi-dev
-    - os: osx
-      name: "Cocoa libraries"
+  - os: linux
+    dist: xenial
+    name: X11 libraries
+    addons:
+      apt:
+        packages:
+        - mesa-common-dev
+        - libgl1-mesa-dev
+        - libxrandr-dev
+        - libxinerama-dev
+        - libxcursor-dev
+        - libxi-dev
+  - os: osx
+    name: Cocoa libraries
 script:
-  - mkdir build
-  - cd build
-  - cmake ..
-  - cmake --build .
+- mkdir build
+- cd build
+- cmake ..
+- cmake --build .
 notifications:
   on_success: never
   on_failure: always
+deploy:
+  provider: releases
+  api_key:
+    secure: TAtHqHvaofyb7apDbwBatKyDXyKEIzw59sI+7P3vBKXsEMVz3Zb0ApKI/BjqH2aYHWbaSrrxqnScDzrN+P/J8XZEis/s772zrjvgNw6GO17G5movdi9DBtLkxTzrFinIv91bpdhOoa2amA2DSZLQAuY8gn5hx/Llwk8+RSKpHu+DHeimYw+A3J92uTuNuLgyHMkIozs7tYY2y44DxYn95KEo01JTXbGNSBz1arXHNOCOdcHP29fWAvF9/C2IQBguER8SiOXNEn0bdXQ5/2638vzuzYifqACWSL55NxDEjHtTxu5u/JgVD169qfQHLbfsVABVUvL1poBPKAABXKG/uIF4ZL+GbpRXG1LwCvW7yLKT92qR2Lr3BH9Y3TBV+b8hs2NyHDj6lLZfs3riw595TRZfGO3F71dPw6otfqhEL554zLwhix95/dcvMAR6T7s2NoCUbcRTjG0Fs/+qQ7AWDUKgERXSRLGbX6aYUPnONOg16riy7hIc1nqwDa72mIUTLnnGKOBvhXJ/9kJQJeY/dlTr6HkB4w0L9LHn+QhbomAGCWyLRVXbhXxwgfPuSfcllSJIAFlJzuHKhKcjzXbiryrFUku6H3/rflWarqL4JZwMECkibY+xBmSiPP4/VVXkS6WCqTxtYJ4QPCrFM9gIWL1d2LW2CNEIFhJCLDKDXww=
+  file_glob: true
+  file: build/FPT-*
+  on:
+    repo: ardenrasmussen/fpt
+    branch: glfw
