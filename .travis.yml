@@ -9,7 +9,8 @@ jobs:
       addons:
         apt:
           packages:
-            - libmesa-dev
+            - mesa-common-dev
+            - libgl1-mesa-dev
             - libxrandr-dev
             - libxinerama-dev
             - libxcursor-dev
