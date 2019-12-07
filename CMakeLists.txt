@@ -80,7 +80,7 @@ set_target_properties(
 
 target_link_libraries(${PROJECT_NAME}_static glfw)
 
-install(TARGETS ${PROJECT_NAME}_static)
+install(TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION lib)
 
 if(BUILD_SHARED)
   add_library(${PROJECT_NAME}_shared SHARED ${SOURCE})
@@ -100,7 +100,7 @@ if(BUILD_SHARED)
 
   target_link_libraries(${PROJECT_NAME}_shared glfw)
 
-  install(TARGETS ${PROJECT_NAME}_shared)
+  install(TARGETS ${PROJECT_NAME}_shared LIBRARY DESTINATION lib)
 
   add_library(${PROJECT_NAME} ALIAS ${PROJECT_NAME}_shared)
 else()
