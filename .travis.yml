@@ -9,6 +9,7 @@ jobs:
       addons:
         apt:
           packages:
+            - libmesa-dev
             - libxrandr-dev
             - libxinerama-dev
             - libxcursor-dev
