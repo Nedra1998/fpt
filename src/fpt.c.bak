@@ -1,0 +1,267 @@
+#include "fpt/fpt.h"
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "fpt/gl/gl.h"
+#include "fpt/key.h"
+
+const char* vertex_shader_src =
+    "#version 330 core\n"
+    "layout (location = 0) in vec2 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
+    "}\0";
+const char* fragment_shader_src =
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "uniform vec4 primColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = primColor;\n"
+    "}\0";
+
+#define EVENT_QUEUE_SIZE 64
+#define MAX_POLYGON_SIZE 128
+
+typedef struct glfw_event {
+  int key;
+  float px, py;
+} glfw_event_t;
+
+static GLFWwindow* window_ = NULL;
+static size_t width_ = 0, height_ = 0;
+static float r_ = 0.0, g_ = 0.0, b_ = 0.0, pen_size_ = 1.0;
+
+static unsigned int shader_program_;
+static int shader_color_location_;
+static unsigned int VBO_, VAO_;
+static float vertices_[MAX_POLYGON_SIZE];
+
+static glfw_event_t event_queue_[EVENT_QUEUE_SIZE];
+static size_t event_index_ = 0;
+
+void push_event(glfw_event_t ev) {
+  if (event_index_ == EVENT_QUEUE_SIZE) {
+    for (size_t i = 0; i < event_index_ - 1; ++i) {
+      event_queue_[i] = event_queue_[i + 1];
+    }
+    event_index_--;
+  }
+  event_queue_[event_index_] = ev;
+  event_index_++;
+}
+void pop_event(glfw_event_t* ev) {
+  if (event_index_ == 0) {
+    ev = NULL;
+    return;
+  } else {
+    *ev = event_queue_[0];
+    for (size_t i = 0; i < event_index_ - 1; ++i) {
+      event_queue_[i] = event_queue_[i + 1];
+    }
+    event_index_--;
+  }
+}
+
+void glfw_error_callback(int error_code, const char* description) {
+  fprintf(stderr, "GLFW [%d]: %s", error_code, description);
+}
+void glfw_framebuffer_size_callback(GLFWwindow* win, int w, int h) {
+  width_ = w;
+  height_ = h;
+  glViewport(0, 0, width_, height_);
+}
+void glfw_char_callback(GLFWwindow* win, unsigned int codepoint) {
+  push_event((glfw_event_t){(int)codepoint, 0.0f, 0.0f});
+}
+void glfw_mouse_button_callback(GLFWwindow* win, int button, int action,
+                                int mods) {
+  if (action == GLFW_RELEASE) {
+    double px, py;
+    glfwGetCursorPos(window_, &px, &py);
+    push_event((glfw_event_t){-button - 1, (float)px, (float)py});
+  }
+}
+
+bool G_init_graphics(size_t w, size_t h) {
+  glfwSetErrorCallback(glfw_error_callback);
+  if (!glfwInit()) {
+    const char* glfw_err;
+    glfwGetError(&glfw_err);
+    fprintf(stderr, "Failed to initalize GLFW: %s\n", glfw_err);
+    return false;
+  }
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  int glfw_major, glfw_minor, glfw_patch;
+  glfwGetVersion(&glfw_major, &glfw_minor, &glfw_patch);
+  width_ = w;
+  height_ = h;
+  window_ = glfwCreateWindow(width_, height_, "FPT", NULL, NULL);
+  if (window_ == NULL) {
+    fprintf(stderr, "Failed to create GLFW window\n");
+    glfwTerminate();
+    return false;
+  }
+  glfwMakeContextCurrent(window_);
+  if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
+    fprintf(stderr, "Failed to load GL with GLAD\n");
+    glfwDestroyWindow(window_);
+    glfwTerminate();
+    return false;
+  };
+  glfwSwapInterval(1);
+  glViewport(0, 0, width_, height_);
+  glfwSetFramebufferSizeCallback(window_, glfw_framebuffer_size_callback);
+  glfwSetCharCallback(window_, glfw_char_callback);
+  glfwSetMouseButtonCallback(window_, glfw_mouse_button_callback);
+
+  int success;
+  unsigned vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
+  glCompileShader(vertex_shader);
+  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    char info_log[512];
+    glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
+    fprintf(stderr, "Failed to compile vertex shader: %s", info_log);
+  }
+  unsigned fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragment_shader, 1, &fragment_shader_src, NULL);
+  glCompileShader(fragment_shader);
+  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    char info_log[512];
+    glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
+    fprintf(stderr, "Failed to compile fragment shader: %s", info_log);
+  }
+  shader_program_ = glCreateProgram();
+  glAttachShader(shader_program_, vertex_shader);
+  glAttachShader(shader_program_, fragment_shader);
+  glLinkProgram(shader_program_);
+  glGetProgramiv(shader_program_, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    char info_log[512];
+    glGetProgramInfoLog(shader_program_, 512, NULL, info_log);
+    fprintf(stderr, "Failed to link shader program: %s", info_log);
+  }
+  shader_color_location_ = glGetUniformLocation(shader_program_, "primColor");
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+  glGenBuffers(1, &VBO_);
+  glGenVertexArrays(1, &VAO_);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STREAM_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
+  glUseProgram(shader_program_);
+  glBindVertexArray(VAO_);
+  glUniform4f(shader_color_location_, 0.0f, 0.0f, 0.0f, 1.0f);
+
+  return true;
+}
+
+bool G_close() {
+  if (window_ != NULL) return true;
+  glfwDestroyWindow(window_);
+  glfwTerminate();
+  return true;
+}
+
+void G_display_image() { glfwSwapBuffers(window_); }
+
+void G_clear() { glClear(GL_COLOR_BUFFER_BIT); }
+
+void G_rgb(float red, float green, float blue) {
+  r_ = red > 0.0f ? red < 1.0f ? red : 1.0f : 0.0f;
+  g_ = green > 0.0f ? green < 1.0f ? green : 1.0f : 0.0f;
+  b_ = blue > 0.0f ? blue < 1.0f ? blue : 1.0f : 0.0f;
+  glClearColor(r_, g_, b_, 0.0f);
+  glUniform4f(shader_color_location_, r_, g_, b_, 0.0f);
+}
+void G_set_pen_size(float size) {
+  pen_size_ = size;
+  glPointSize(size);
+}
+
+void G_point(float x, float y) {
+  vertices_[0] = x;
+  vertices_[1] = y;
+  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STREAM_DRAW);
+  glUseProgram(shader_program_);
+  glBindVertexArray(VAO_);
+  glDrawArrays(GL_POINTS, 0, 2);
+}
+void G_line(float sx, float sy, float ex, float ey) {
+  glBegin(GL_LINES);
+  glVertex2f(sx, height_ - 1 - sy);
+  glVertex2f(ex, height_ - 1 - ey);
+  glEnd();
+}
+void G_rectangle(float x, float y, float w, float h) {
+  glBegin(GL_LINE_LOOP);
+  glVertex2f(x, height_ - 1 - y - h);
+  glVertex2f(x + w, height_ - 1 - y - h);
+  glVertex2f(x + w, height_ - 1 - y);
+  glVertex2f(x, height_ - 1 - y);
+  glEnd();
+}
+void G_fill_rectangle(float x, float y, float w, float h) {
+  glBegin(GL_QUADS);
+  glVertex2f(x, height_ - 1 - y - h);
+  glVertex2f(x + w, height_ - 1 - y - h);
+  glVertex2f(x + w, height_ - 1 - y);
+  glVertex2f(x, height_ - 1 - y);
+  glEnd();
+}
+void G_triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
+  glBegin(GL_LINE_LOOP);
+  glVertex2f(x1, height_ - 1 - y1);
+  glVertex2f(x2, height_ - 1 - y2);
+  glVertex2f(x3, height_ - 1 - y3);
+  glEnd();
+}
+void G_fill_triangle(float x1, float y1, float x2, float y2, float x3,
+                     float y3) {
+  glBegin(GL_TRIANGLES);
+  glVertex2f(x1, height_ - 1 - y1);
+  glVertex2f(x2, height_ - 1 - y2);
+  glVertex2f(x3, height_ - 1 - y3);
+  glEnd();
+}
+int G_handle_events(float* px, float* py) {
+  *px = 0.0f;
+  *py = 0.0f;
+  glfwPollEvents();
+  while (event_index_ != 0) {
+    glfw_event_t ev;
+    pop_event(&ev);
+    if (ev.key < 0) {
+      *px = ev.px;
+      *py = ev.py;
+      return ev.key;
+    } else if (ev.key > 0) {
+      return ev.key;
+    }
+  }
+  return 0;
+}
+int Gi_events(float* pos) { return G_handle_events(&pos[0], &pos[1]); }
+int G_wait_key() {
+  float pos[2];
+  int key;
+  G_display_image();
+  do {
+    key = Gi_events(pos);
+  } while (key <= 0);
+  return key;
+}

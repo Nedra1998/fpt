@@ -1,0 +1,18 @@
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+SUBDIRLIST(EXAMPLES "${CMAKE_CURRENT_SOURCE_DIR}")
+
+FOREACH(EXAMPLE ${EXAMPLES})
+  FILE(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR} "${EXAMPLE}/*.c")
+  ADD_EXECUTABLE(${EXAMPLE} ${SRC_FILES})
+  TARGET_LINK_LIBRARIES(${EXAMPLE} ${PROJECT_NAME})
+ENDFOREACH()
