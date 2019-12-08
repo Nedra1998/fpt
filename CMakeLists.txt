@@ -78,16 +78,16 @@ set_target_properties(
 
 target_link_libraries(${PROJECT_NAME}_static PUBLIC glfw)
 
-add_custom_command(OUTPUT libFPT.a
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libFPT.a
   COMMAND ar -x $<TARGET_FILE:FPT_static>
   COMMAND ar -x $<TARGET_FILE:glfw>
   COMMAND ar -qcs libFPT.a *.o
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS FPT_static glfw
   )
-add_custom_target(tmp ALL DEPENDS libFPT.a)
+add_custom_target(tmp ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libFPT.a)
 
-install(FILES libFPT.a ARCHIVE DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libFPT.a DESTINATION lib)
 
 if(BUILD_EXAMPLES)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/examples)
