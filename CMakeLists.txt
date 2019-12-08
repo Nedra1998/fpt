@@ -8,7 +8,6 @@ project(
   LANGUAGES C)
 
 option(STATIC_ANALYSIS "Enable static analysis" FALSE)
-option(BUILD_SHARED "Compile shared library" TRUE)
 option(BUILD_EXAMPLES "Compile example executables" TRUE)
 
 # ##############################################################################
@@ -23,8 +22,8 @@ set(FPT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # ##############################################################################
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
-      "Release"
-      CACHE STRING "Choose the type of build" FORCE)
+    "Release"
+    CACHE STRING "Choose the type of build" FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -32,8 +31,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json")
     execute_process(
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
-              ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json)
+      ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
+      ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json)
   endif()
 endif()
 
@@ -64,48 +63,31 @@ find_package(Git REQUIRED)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external)
 
 add_library(${PROJECT_NAME}_static STATIC ${SOURCE})
-add_library(${PROJECT_NAME}::static ALIAS ${PROJECT_NAME}_static)
 
 target_include_directories(${PROJECT_NAME}_static
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/fpt DESTINATION include/)
 target_compile_options(
   ${PROJECT_NAME}_static PRIVATE -Wall -Wextra
-                                 $<$<CONFIG:Debug>:-O0>$<$<CONFIG:Release>:-O3>)
+  $<$<CONFIG:Debug>:-O0>$<$<CONFIG:Release>:-O3>)
 target_compile_definitions(${PROJECT_NAME}_static PRIVATE
-                           $<$<CONFIG:Debug>:DEBUG>$<$<CONFIG:Release>:RELEASE>)
+  $<$<CONFIG:Debug>:DEBUG>$<$<CONFIG:Release>:RELEASE>)
 set_target_properties(
   ${PROJECT_NAME}_static PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED TRUE
-                                    C_EXTENSIONS TRUE)
+  C_EXTENSIONS TRUE)
 
-target_link_libraries(${PROJECT_NAME}_static glfw)
+target_link_libraries(${PROJECT_NAME}_static PUBLIC glfw)
 
-install(TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION lib)
+add_custom_command(OUTPUT libFPT.a
+  COMMAND ar -x $<TARGET_FILE:FPT_static>
+  COMMAND ar -x $<TARGET_FILE:glfw>
+  COMMAND ar -qcs libFPT.a *.o
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  DEPENDS FPT_static glfw
+  )
+add_custom_target(tmp ALL DEPENDS libFPT.a)
 
-if(BUILD_SHARED)
-  add_library(${PROJECT_NAME}_shared SHARED ${SOURCE})
-  add_library(${PROJECT_NAME}::shared ALIAS ${PROJECT_NAME}_shared)
-
-  target_include_directories(${PROJECT_NAME}_shared
-                             PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_compile_options(
-    ${PROJECT_NAME}_shared
-    PRIVATE -Wall -Wextra $<$<CONFIG:Debug>:-O0>$<$<CONFIG:Release>:-O3>)
-  target_compile_definitions(
-    ${PROJECT_NAME}_shared PRIVATE
-    $<$<CONFIG:Debug>:DEBUG>$<$<CONFIG:Release>:RELEASE>)
-  set_target_properties(
-    ${PROJECT_NAME}_shared PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED TRUE
-                                      C_EXTENSIONS TRUE)
-
-  target_link_libraries(${PROJECT_NAME}_shared glfw)
-
-  install(TARGETS ${PROJECT_NAME}_shared LIBRARY DESTINATION lib)
-
-  add_library(${PROJECT_NAME} ALIAS ${PROJECT_NAME}_shared)
-else()
-  add_library(${PROJECT_NAME} ALIAS ${PROJECT_NAME}_static)
-endif()
+install(FILES libFPT.a ARCHIVE DESTINATION lib)
 
 if(BUILD_EXAMPLES)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/examples)
