@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(
   FPT
-  VERSION 3.0.0
+  VERSION 3.1.1
   LANGUAGES C)
 
 option(STATIC_ANALYSIS "Enable static analysis" FALSE)

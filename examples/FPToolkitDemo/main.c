@@ -1,4 +1,4 @@
-#include "FPToolkit.c"
+#include "fpt/fpt.h"
 
 int main() {
   int swidth, sheight;
@@ -90,5 +90,5 @@ int main() {
   int key;
   key = G_wait_key();  // pause so user can see results
 
-  G_save_image_to_file("demo.xwd");
+  G_save_image_to_file("demo.bmp");
 }
